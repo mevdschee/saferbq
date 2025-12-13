@@ -79,7 +79,9 @@ go get github.com/mevdschee/saferbq
 
 ## Usage
 
-### Basic Query with Table Identifier
+### Create a supporting client
+
+Create the client from the `saferbq` package instead of the `bigquery` package.
 
 ```go
 import (
@@ -89,11 +91,15 @@ import (
 )
 
 ctx := context.Background()
-// create the client from the saferbq package instead of the bigquery package.
-client, _ := saferbq.NewClient(ctx, projId)
+client, _ := saferbq.NewClient(ctx, projId) // instead of bigquery.NewClient()
 defer client.Close()
+```
 
-// $table will be replaced with `myproject.mydataset.mytable`
+### Basic Query with Table Identifier
+
+The `$table` parameter will be replaced with `myproject.mydataset.mytable`
+
+```go
 sql := "SELECT * FROM $table WHERE id = 1"
 q := client.Query(sql)
 q.Parameters = []bigquery.QueryParameter{
@@ -106,9 +112,10 @@ job, _ := q.Run(ctx)
 
 ### Mixing $ Identifiers with @ Parameters
 
+The `$table` parameter becomes a quoted identifier, while the `@corpus`
+parameter stays as a BigQuery parameter (which is safe for data values).
+
 ```go
-// $table becomes a quoted identifier
-// @corpus stays as a BigQuery parameter (safe for data values)
 sql := "SELECT * FROM $table WHERE corpus = @corpus"
 q := client.Query(sql)
 q.Parameters = []bigquery.QueryParameter{
@@ -142,6 +149,8 @@ job, _ := q.Run(ctx)
 
 ### Multiple Table Identifiers
 
+You can use the named parameters multiple times.
+
 ```go
 sql := "SELECT * FROM $table1 JOIN $table2 ON $table1.id = $table2.id"
 q := client.Query(sql)
@@ -155,6 +164,8 @@ job, _ := q.Run(ctx)
 ```
 
 ### Combining with Positional Parameters
+
+You can mix the named parameters with positional parameters.
 
 ```go
 sql := "SELECT * FROM $project.$dataset.$table WHERE id = ? AND status = ?"
