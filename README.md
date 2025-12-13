@@ -250,8 +250,8 @@ or `roles/bigquery.dataViewer`, use 3 separate parameters.
 - **No SQL Injection**: Identifiers are validated and quoted, never concatenated
 - **Strict Character Validation**: Invalid characters cause immediate query
   failure
-- **Comprehensive Parameter Validation**: Errors on missing, unused, empty,
-  invalid, or too long parameters
+- **Parameter Validation**: Errors on missing, unused, empty, invalid, or too
+  long parameters
 - **Drop-in Replacement**: Same API as official BigQuery SDK
 
 ## Testing
