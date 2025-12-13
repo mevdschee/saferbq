@@ -182,7 +182,7 @@ mechanism.
 
 ## Naming Restrictions
 
-### Parameter Names (in SQL)
+### Parameter Names (in the SQL string)
 
 Parameter names in your SQL must follow these rules:
 
