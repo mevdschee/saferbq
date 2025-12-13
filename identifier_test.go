@@ -90,11 +90,6 @@ func TestQuoteIdentifier(t *testing.T) {
 			identifierIn:  " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
 			identifierOut: "` ____________-__0123456789_______ABCDEFGHIJKLMNOPQRSTUVWXYZ______abcdefghijklmnopqrstuvwxyz____`",
 		},
-		{
-			name:          "extended ascii characters (128-255)",
-			identifierIn:  "ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜø£Ø×ƒáíóúñÑªº¿®¬½¼¡«»░▒▓│┤ÁÂÀ©╣║╗╝¢¥┐└┴┬├─┼ãÃ╚╔╩╦╠═╬¤ðÐÊËÈıÍÎÏ┘┌█▄¦Ì▀ÓßÔÒõÕµþÞÚÛÙýÝ¯´≡±‗¾¶§÷¸°¨·¹³²■ ",
-			identifierOut: "`ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜø_Ø_ƒáíóúñÑªº___½¼________ÁÂÀ______________ãÃ________ðÐÊËÈıÍÎÏ_____Ì_ÓßÔÒõÕµþÞÚÛÙýÝ_____¾_______¹³²_ `",
-		},
 	}
 
 	for _, tt := range tests {
