@@ -6,11 +6,6 @@ import (
 	"unicode"
 )
 
-const (
-	// replacementRune is the character used to replace invalid identifier characters
-	replacementRune = '_'
-)
-
 // filterIdentifierChars filters out Unicode characters that do not fall in category
 // - L (letter)
 // - M (mark)
@@ -32,7 +27,7 @@ func filterIdentifierChars(s string) string {
 			unicode.In(r, unicode.Pc, unicode.Pd, unicode.Zs) {
 			builder.WriteRune(r)
 		} else {
-			builder.WriteRune(replacementRune)
+			builder.WriteRune('_')
 		}
 	}
 	return builder.String()
