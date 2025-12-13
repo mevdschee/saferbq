@@ -25,10 +25,12 @@ door to SQL injection.
 
 ```go
 // Instead of unsafe string concatenation with user input:
+client := bigquery.NewClient(ctx, projId)
 q := client.Query(fmt.Sprintf("SELECT * FROM `%s` WHERE id = 1", userInput))
 q.Run(ctx)
 
 // Use safe $ parameters for user input (supported by saferbq):
+client := saferbq.NewClient(ctx, projId)
 q := client.Query("SELECT * FROM $table WHERE id = 1")
 q.Parameters = []bigquery.QueryParameter{{Name: "$table", Value: userInput}}
 q.Run(ctx)
@@ -74,7 +76,7 @@ Note how you have to create the client from the `saferbq` package instead of the
 ## Installation
 
 ```bash
-go get github.com/maurits/saferbq
+go get github.com/mevdschee/saferbq
 ```
 
 ## Usage
@@ -85,7 +87,7 @@ go get github.com/maurits/saferbq
 import (
     "context"
     "cloud.google.com/go/bigquery"
-    "github.com/maurits/saferbq"
+    "github.com/mevdschee/saferbq"
 )
 
 ctx := context.Background()

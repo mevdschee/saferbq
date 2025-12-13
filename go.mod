@@ -1,4 +1,4 @@
-module github.com/maurits/saferbq
+module github.com/mevdschee/saferbq
 
 go 1.24.0
 

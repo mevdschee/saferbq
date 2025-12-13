@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"cloud.google.com/go/bigquery"
-	"github.com/maurits/saferbq"
+	"github.com/mevdschee/saferbq"
 	"google.golang.org/api/iterator"
 )
 
