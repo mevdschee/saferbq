@@ -11,8 +11,8 @@ backticks.
 
 BigQuery's official Go SDK uses `@` for named parameters and `?` for positional
 parameters, but these cannot be used for identifiers in SQL statements that are
-escaped by backticks. You're forced to use string concatenation, which opens the
-door to SQL injection.
+escaped by backticks. You're forced to use string concatenation, which may cause
+a SQL injection vulnerability.
 
 ## The Solution
 
