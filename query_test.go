@@ -59,22 +59,6 @@ func TestQueryTranslate(t *testing.T) {
 			sqlOut:        "SELECT * FROM `mytable` WHERE corpus = @corpus",
 			parametersOut: []bigquery.QueryParameter{{Name: "corpus", Value: "corpus_value"}},
 		},
-		// TODO: slice of identifiers not yet supported
-		//{
-		//	name:          "slice of identifiers",
-		//	sqlIn:         "GRANT $roles ON DATASET `your_project.your_dataset` TO @user;",
-		//	parametersIn:  []bigquery.QueryParameter{{Name: "$roles", Value: []string{"roles/bigquery.dataViewer", "roles/bigquery.dataEditor"}}, {Name: "@user", Value: "user@example.com"}},
-		//	sqlOut:        "GRANT `roles/bigquery.dataViewer`, `roles/bigquery.dataEditor` ON DATASET `your_project.your_dataset` TO @user;",
-		//	parametersOut: []bigquery.QueryParameter{{Name: "user", Value: "user@example.com"}},
-		//},
-		// TODO: slice expansion for parameters not yet supported
-		//{
-		//	name:          "slice of parameter values",
-		//	sqlIn:         "SELECT * FROM `mytable` WHERE corpus IN (@corpus)",
-		//	parametersIn:  []bigquery.QueryParameter{{Name: "@corpus", Value: []string{"value1", "value2"}}},
-		//	sqlOut:        "SELECT * FROM `mytable` WHERE corpus IN (@corpus_1, @corpus_2)",
-		//	parametersOut: []bigquery.QueryParameter{{Name: "corpus_1", Value: "value1"}, {Name: "corpus_2", Value: "value2"}},
-		//},
 		// Test cases from documentation examples
 		{
 			name:          "positional params from doc - shakespeare corpus",
