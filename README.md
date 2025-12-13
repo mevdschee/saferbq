@@ -7,12 +7,12 @@ dollar-sign `$` syntax for table and dataset names that need backtick quoting.
 
 When building dynamic BigQuery queries, you often need to reference table or
 dataset names that are dynamically determined at runtime and are escaped by
-backticks. This happens for instance in DDL operations (CREATE, ALTER, DROP).
+backticks.
 
 BigQuery's official Go SDK uses `@` for named parameters and `?` for positional
-parameters, but these cannot be used for table/dataset identifiers in SQL
-statements that are escaped by backticks. You're forced to use string
-concatenation, which opens the door to **SQL injection**.
+parameters, but these cannot be used for identifiers in SQL statements that are
+escaped by backticks. You're forced to use string concatenation, which opens the
+door to SQL injection.
 
 ## The Solution
 
@@ -32,6 +32,40 @@ sql := "SELECT * FROM $table WHERE id = 1"
 q.Parameters = []bigquery.QueryParameter{
     {Name: "$table", Value: "myproject.mydataset.mytable"},
 }
+```
+
+### SQL Injection Attack
+
+String concatenation in SQL is UNSAFE, as it allows for SQL injection:
+
+```go
+client := bigquery.NewClient(ctx, "myproject")
+tableName := getUserInput() // User provides: "logs` WHERE 1=1; DROP TABLE customers; --"
+q := client.Query(fmt.Sprintf("SELECT * FROM `%s` WHERE user_id = 123", tableName))
+// Results in: SELECT * FROM `logs` WHERE 1=1; DROP TABLE customers; --` WHERE user_id = 123
+// NB: Returns all logs AND drops the customers table!
+```
+
+This mitigation does NOT work, as identifiers cannot be named parameters:
+
+```go
+client := bigquery.NewClient(ctx, "myproject")
+tableName := getUserInput() // User provides: "logs` WHERE 1=1; DROP TABLE customers; --"
+q := client.Query("SELECT * FROM @table WHERE user_id = 123")
+q.Parameters = []bigquery.QueryParameter{{Name: "table", Value: tableName}}
+// Results: SELECT * FROM "logs` WHERE 1=1; DROP TABLE customers; --" WHERE user_id = 123
+// NB: Returns an error as named parameters on table names are not supported.
+```
+
+This is how you prevent SQL injection with saferbq:
+
+```go
+client := saferbq.NewClient(ctx, "myproject")
+tableName := getUserInput() // User provides: "logs` WHERE 1=1; DROP TABLE customers; --"
+q := client.Query("SELECT * FROM $table WHERE user_id = 123")
+q.Parameters = []bigquery.QueryParameter{{Name: "$table", Value: tableName}}
+// Results: SELECT * FROM `logs__WHERE_1_1__DROP_TABLE_customers____` WHERE user_id = 123
+// NB: Fails safely as that table does not exist, customers table unaffected.
 ```
 
 ## Installation

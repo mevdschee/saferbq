@@ -250,6 +250,35 @@ func TestQueryTranslate(t *testing.T) {
 			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: "mytable"}, {Name: "$unused", Value: "value"}},
 			errorMessage: "identifier $unused not found in query",
 		},
+		// SQL injection attempt cases - verify sanitization
+		{
+			name:          "injection attempt - DROP TABLE via backtick escape",
+			sqlIn:         "SELECT * FROM $table WHERE user_id = @user_id",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "logs` WHERE 1=1; DROP TABLE customers; --"}, {Name: "@user_id", Value: 123}},
+			sqlOut:        "SELECT * FROM `logs__WHERE_1_1__DROP_TABLE_customers____` WHERE user_id = @user_id",
+			parametersOut: []bigquery.QueryParameter{{Name: "user_id", Value: 123}},
+		},
+		{
+			name:          "injection attempt - UNION attack",
+			sqlIn:         "SELECT * FROM $table WHERE id = @id",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "users` UNION SELECT * FROM passwords WHERE `1`=`1"}, {Name: "@id", Value: 1}},
+			sqlOut:        "SELECT * FROM `users__UNION_SELECT___FROM_passwords_WHERE__1___1` WHERE id = @id",
+			parametersOut: []bigquery.QueryParameter{{Name: "id", Value: 1}},
+		},
+		{
+			name:          "injection attempt - semicolon statement separator",
+			sqlIn:         "DELETE FROM $table WHERE id = @id",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "temp_table`; DELETE FROM important_data; --"}, {Name: "@id", Value: 999}},
+			sqlOut:        "DELETE FROM `temp_table___DELETE_FROM_important_data____` WHERE id = @id",
+			parametersOut: []bigquery.QueryParameter{{Name: "id", Value: 999}},
+		},
+		{
+			name:          "injection attempt - comment injection",
+			sqlIn:         "UPDATE $table SET status = @status WHERE id = @id",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "users` -- malicious comment"}, {Name: "@status", Value: "active"}, {Name: "@id", Value: 1}},
+			sqlOut:        "UPDATE `users_____malicious_comment` SET status = @status WHERE id = @id",
+			parametersOut: []bigquery.QueryParameter{{Name: "status", Value: "active"}, {Name: "id", Value: 1}},
+		},
 	}
 
 	for _, tt := range tests {
