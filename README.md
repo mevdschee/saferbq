@@ -24,14 +24,14 @@ door to SQL injection.
 4. Validates all parameters are present before execution
 
 ```go
-// Instead of unsafe string concatenation:
-sql := fmt.Sprintf("SELECT * FROM `%s` WHERE id = 1", unsafetable)
+// Instead of unsafe string concatenation with user input:
+q := client.Query(fmt.Sprintf("SELECT * FROM `%s` WHERE id = 1", userInput))
+q.Run(ctx)
 
-// Use safe $ parameters:
-sql := "SELECT * FROM $table WHERE id = 1"
-q.Parameters = []bigquery.QueryParameter{
-    {Name: "$table", Value: "myproject.mydataset.mytable"},
-}
+// Use safe $ parameters for user input (supported by saferbq):
+q := client.Query("SELECT * FROM $table WHERE id = 1")
+q.Parameters = []bigquery.QueryParameter{{Name: "$table", Value: userInput}}
+q.Run(ctx)
 ```
 
 ### SQL Injection Attack
@@ -39,7 +39,7 @@ q.Parameters = []bigquery.QueryParameter{
 String concatenation in SQL is unsafe, as it is vulnerable to SQL injection:
 
 ```go
-client := bigquery.NewClient(ctx, "myproject")
+client := bigquery.NewClient(ctx, projId)
 tableName := getUserInput() // User provides: "logs` WHERE 1=1; DROP TABLE customers; --"
 q := client.Query(fmt.Sprintf("SELECT * FROM `%s` WHERE user_id = 123", tableName))
 // Results in: SELECT * FROM `logs` WHERE 1=1; DROP TABLE customers; --` WHERE user_id = 123
@@ -49,7 +49,7 @@ q := client.Query(fmt.Sprintf("SELECT * FROM `%s` WHERE user_id = 123", tableNam
 This mitigation does NOT work, as identifiers cannot be named parameters:
 
 ```go
-client := bigquery.NewClient(ctx, "myproject")
+client := bigquery.NewClient(ctx, projId)
 tableName := getUserInput() // User provides: "logs` WHERE 1=1; DROP TABLE customers; --"
 q := client.Query("SELECT * FROM @table WHERE user_id = 123")
 q.Parameters = []bigquery.QueryParameter{{Name: "table", Value: tableName}}
@@ -60,7 +60,7 @@ q.Parameters = []bigquery.QueryParameter{{Name: "table", Value: tableName}}
 This is how you prevent SQL injection with saferbq:
 
 ```go
-client := saferbq.NewClient(ctx, "myproject")
+client := saferbq.NewClient(ctx, projId)
 tableName := getUserInput() // User provides: "logs` WHERE 1=1; DROP TABLE customers; --"
 q := client.Query("SELECT * FROM $table WHERE user_id = 123")
 q.Parameters = []bigquery.QueryParameter{{Name: "$table", Value: tableName}}
@@ -86,7 +86,7 @@ import (
 )
 
 ctx := context.Background()
-client, _ := saferbq.NewClient(ctx, "myproject")
+client, _ := saferbq.NewClient(ctx, projId)
 defer client.Close()
 
 // $table will be replaced with `myproject.mydataset.mytable`
