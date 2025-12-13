@@ -284,5 +284,5 @@ Contributions welcome! Please open an issue or PR.
 
 - [BigQuery Go SDK](https://pkg.go.dev/cloud.google.com/go/bigquery)
 - [BigQuery Parameterized Queries](docs.cloud.google.com/bigquery/docs/parameterized-queries)
-- [BigQuery Standard SQL Reference](https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax)
 - [BigQuery Identifiers](https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#identifiers)
+- [BigQuery Standard SQL Reference](https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax)
