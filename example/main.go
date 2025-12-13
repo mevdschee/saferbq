@@ -14,7 +14,7 @@ func main() {
 	ctx := context.Background()
 
 	// Create client (requires valid GCP credentials)
-	client, err := saferbq.NewClient(ctx, "my-project")
+	client, err := saferbq.NewClient(ctx, "myproject")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,18 +42,19 @@ func main() {
 }
 
 func queryWithIdentifiers(ctx context.Context, client *saferbq.Client) {
-	// $table gets replaced with quoted identifier: `my_project_my_dataset_my_table`
-	// Hyphens and dots are automatically converted to underscores
+	// $table gets replaced with quoted identifier: `mytable`
+	// NB: Special characters (including dots) are automatically converted
+	// to underscores
 	sql := "SELECT * FROM $table WHERE id = 1"
 	q := client.Query(sql)
 	q.Parameters = []bigquery.QueryParameter{
 		{
 			Name:  "$table",
-			Value: "my-project.my-dataset.my-table",
+			Value: "mytable",
 		},
 	}
 
-	// Resulting SQL: SELECT * FROM `my_project_my_dataset_my_table` WHERE id = 1
+	// Resulting SQL: SELECT * FROM `mytable` WHERE id = 1
 	it, err := q.Read(ctx)
 	if err != nil {
 		log.Printf("Query error: %v", err)
@@ -81,7 +82,7 @@ func mixedParameters(ctx context.Context, client *saferbq.Client) {
 	q.Parameters = []bigquery.QueryParameter{
 		{
 			Name:  "$table",
-			Value: "my-table",
+			Value: "mytable",
 		},
 		{
 			Name:  "@corpus",
@@ -89,7 +90,7 @@ func mixedParameters(ctx context.Context, client *saferbq.Client) {
 		},
 	}
 
-	// Resulting SQL: SELECT * FROM `my_table` WHERE corpus = @corpus
+	// Resulting SQL: SELECT * FROM `mytable` WHERE corpus = @corpus
 	it, err := q.Read(ctx)
 	if err != nil {
 		log.Printf("Query error: %v", err)
@@ -117,22 +118,22 @@ func queryPositionalParams(ctx context.Context, client *saferbq.Client) {
 	q.Parameters = []bigquery.QueryParameter{
 		{
 			Name:  "$project",
-			Value: "my-project",
+			Value: "myproject",
 		},
 		{
 			Name:  "$dataset",
-			Value: "my-dataset",
+			Value: "mydataset",
 		},
 		{
 			Name:  "$table",
-			Value: "my-table",
+			Value: "mytable",
 		},
 		{
 			Value: 1, // Positional parameter
 		},
 	}
 
-	// Resulting SQL: SELECT * FROM `my_project`.`my_dataset`.`my_table` WHERE id = ?
+	// Resulting SQL: SELECT * FROM `myproject`.`mydataset`.`mytable` WHERE id = ?
 	it, err := q.Read(ctx)
 	if err != nil {
 		log.Printf("Query error: %v", err)
@@ -165,15 +166,15 @@ func ddlOperations(ctx context.Context, client *saferbq.Client) {
 	q.Parameters = []bigquery.QueryParameter{
 		{
 			Name:  "$dataset",
-			Value: "my-dataset",
+			Value: "mydataset",
 		},
 		{
 			Name:  "$table",
-			Value: "my-new-table",
+			Value: "mynew-table",
 		},
 	}
 
-	// Resulting SQL: CREATE TABLE IF NOT EXISTS `my_dataset`.`my_new_table` (...)
+	// Resulting SQL: CREATE TABLE IF NOT EXISTS `mydataset`.`mynew_table` (...)
 	job, err := q.Run(ctx)
 	if err != nil {
 		log.Printf("DDL error: %v", err)
