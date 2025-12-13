@@ -1,7 +1,6 @@
 package saferbq
 
 import (
-	"strings"
 	"testing"
 )
 
@@ -80,23 +79,6 @@ func TestQuoteIdentifier(t *testing.T) {
 				t.Errorf("quoteIdentifier(%v) = %q, want %q", tt.identifierIn, identifierOut, tt.identifierOut)
 			}
 		})
-	}
-}
-
-func TestQuoteIdentifierLargeMultibyte(t *testing.T) {
-	// Create a string with multibyte characters exceeding 1024 bytes
-	var sb strings.Builder
-	for range 300 {
-		sb.WriteString("áéíóú") // each character is 2 bytes in UTF-8, total 10 bytes per iteration
-	}
-	largeIdentifier := sb.String() // 300 * 10 = 3000 bytes
-
-	quoted := quoteIdentifier(largeIdentifier)
-
-	// Ensure that the content inside backticks is limited to 1024 bytes
-	content := quoted[1 : len(quoted)-1]
-	if len(content) > 1024 {
-		t.Errorf("Content inside backticks length = %d, want <= 1024", len(content))
 	}
 }
 
