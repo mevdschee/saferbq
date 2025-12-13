@@ -14,24 +14,32 @@ import (
 // - Pd (dash)
 // - Zs (space).
 // and replaces them with underscores.
-// Length of the identifier is llimited to 1024 characters.
+// Length of the identifier is llimited to 1024 UTF-8 bytes.
 // This follows BigQuery's table naming rules from:
 // https://docs.cloud.google.com/bigquery/docs/tables#table_naming
 func filterIdentifierChars(s string) string {
-	// limit length to 1024 characters
-	if len(s) > 1024 {
-		s = s[:1024]
-	}
 	// start building the result
 	var builder strings.Builder
+	byteCount := 0
+
 	for _, r := range s {
+		// Calculate the size this rune would take in UTF-8
+		runeSize := len(string(r))
+
+		// Stop if adding this rune would exceed 1024 bytes
+		if byteCount+runeSize > 1024 {
+			break
+		}
+
 		if unicode.IsLetter(r) ||
 			unicode.IsMark(r) ||
 			unicode.IsNumber(r) ||
 			unicode.In(r, unicode.Pc, unicode.Pd, unicode.Zs) {
 			builder.WriteRune(r)
+			byteCount += runeSize
 		} else {
 			builder.WriteRune('_')
+			byteCount += 1 // underscore is always 1 byte
 		}
 	}
 	return builder.String()
