@@ -16,38 +16,45 @@ import (
 // and replaces them with underscores.
 // This follows BigQuery's table naming rules from:
 // https://docs.cloud.google.com/bigquery/docs/tables#table_naming
-func filterIdentifierChars(s string) string {
+func filterIdentifierChars(s string) (string, string) {
 	// start building the result
-	var builder strings.Builder
-	builder.Grow(len(s))
+	var result strings.Builder
+	result.Grow(len(s))
+	var replaced strings.Builder
+	replacedMap := make(map[rune]bool)
 	for _, r := range s {
 		if unicode.IsLetter(r) ||
 			unicode.IsMark(r) ||
 			unicode.IsNumber(r) ||
 			unicode.In(r, unicode.Pc, unicode.Pd, unicode.Zs) {
-			builder.WriteRune(r)
+			result.WriteRune(r)
 		} else {
-			builder.WriteRune('_')
+			result.WriteRune('_')
+			if !replacedMap[r] {
+				replaced.WriteRune(r)
+				replacedMap[r] = true
+			}
 		}
 	}
-	return builder.String()
+	return result.String(), replaced.String()
 }
 
 // QuoteIdentifier safely quotes a table identifier with backticks.
 // This is essential for DDL operations when table names contain backticks,
 // special characters, or are reserved words in BigQuery.
 // Invalid characters (like backticks) are automatically converted to underscores.
-func QuoteIdentifier(identifier any) string {
+func QuoteIdentifier(identifier any) (string, string) {
 	if identifier == nil {
-		return "``"
+		return "``", ""
 	}
 	// Replace any invalid characters with underscores
 	var result string
+	var replaced string
 	switch v := identifier.(type) {
 	case string:
-		result = filterIdentifierChars(v)
+		result, replaced = filterIdentifierChars(v)
 	default:
-		result = filterIdentifierChars(fmt.Sprintf("%v", identifier))
+		result, replaced = filterIdentifierChars(fmt.Sprintf("%v", identifier))
 	}
-	return "`" + result + "`"
+	return "`" + result + "`", replaced
 }

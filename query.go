@@ -104,7 +104,10 @@ func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery
 	// Apply all replacements
 	result := sql
 	for identifier, value := range identifiers {
-		quoted := QuoteIdentifier(value)
+		quoted, replaced := QuoteIdentifier(value)
+		if replaced != "" {
+			return "", nil, fmt.Errorf("identifier %s contains invalid characters: %s", identifier, replaced)
+		}
 		if len(quoted) == 2 {
 			return "", nil, fmt.Errorf("identifier %s is empty", identifier)
 		}
