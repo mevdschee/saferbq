@@ -43,18 +43,14 @@ func filterIdentifierChars(s string) (string, string) {
 // This is essential for DDL operations when table names contain backticks,
 // special characters, or are reserved words in BigQuery.
 // Invalid characters (like backticks) are automatically converted to underscores.
-func QuoteIdentifier(identifier any) (string, string) {
-	if identifier == nil {
-		return "``", ""
-	}
-	// Replace any invalid characters with underscores
-	var result string
-	var replaced string
+func QuoteIdentifier(identifier any) (result string, replaced string) {
 	switch v := identifier.(type) {
+	case nil:
+		result, replaced = filterIdentifierChars("")
 	case string:
 		result, replaced = filterIdentifierChars(v)
 	default:
 		result, replaced = filterIdentifierChars(fmt.Sprintf("%v", identifier))
 	}
-	return "`" + result + "`", replaced
+	return
 }
