@@ -27,7 +27,7 @@ concatenation, which is:
 `saferbq` introduces `$identifier` syntax that:
 
 1. Automatically wraps identifiers in backticks
-2. Safely sanitizes special characters (hyphens, dots → underscores)
+2. Safely sanitizes special characters (convert hyphens to underscores)
 3. Works alongside native BigQuery `@parameters` and `?` positional parameters
 4. Validates all parameters are present before execution
 
