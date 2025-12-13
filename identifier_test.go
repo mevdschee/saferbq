@@ -29,7 +29,12 @@ func TestQuoteIdentifier(t *testing.T) {
 		{
 			name:       "with dot",
 			identifier: "my.dataset.table",
-			expected:   "`my_dataset_table`",
+			expected:   "`my.dataset.table`",
+		},
+		{
+			name:       "with slashes",
+			identifier: "my/dataset/table",
+			expected:   "`my/dataset/table`",
 		},
 		{
 			name:       "with special chars",

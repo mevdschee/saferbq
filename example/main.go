@@ -43,7 +43,7 @@ func main() {
 
 func queryWithIdentifiers(ctx context.Context, client *saferbq.Client) {
 	// $table gets replaced with quoted identifier: `mytable`
-	// NB: Special characters (including dots) are automatically converted
+	// NB: Special characters (hyphens) are automatically converted
 	// to underscores
 	sql := "SELECT * FROM $table WHERE id = 1"
 	q := client.Query(sql)
@@ -208,7 +208,7 @@ func multipleIdentifiers(ctx context.Context, client *saferbq.Client) {
 		},
 	}
 
-	// Resulting SQL: SELECT * FROM `dataset_table1` JOIN `dataset_table2` ON `dataset_table1`.id = `dataset_table2`.id
+	// Resulting SQL: SELECT * FROM `dataset.table1` JOIN `dataset.table2` ON `dataset.table1`.id = `dataset.table2`.id
 	it, err := q.Read(ctx)
 	if err != nil {
 		log.Printf("Query error: %v", err)

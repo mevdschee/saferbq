@@ -1,6 +1,7 @@
 package saferbq
 
 import (
+	"fmt"
 	"testing"
 
 	"cloud.google.com/go/bigquery"
@@ -18,21 +19,21 @@ func TestQueryTranslateWithIdentifiers(t *testing.T) {
 			name:          "identifier replacement only",
 			sql:           "SELECT * FROM $tablename WHERE id = 1",
 			parametersIn:  []bigquery.QueryParameter{{Name: "$tablename", Value: "my-project.my-dataset.my-table"}},
-			expected:      "SELECT * FROM `my_project_my_dataset_my_table` WHERE id = 1",
+			expected:      "SELECT * FROM `my_project.my_dataset.my_table` WHERE id = 1",
 			parametersOut: []bigquery.QueryParameter{},
 		},
 		{
 			name:          "identifier replacement and positional parameter",
 			sql:           "SELECT * FROM $tablename WHERE id = ?",
 			parametersIn:  []bigquery.QueryParameter{{Name: "$tablename", Value: "my-project.my-dataset.my-table"}, {Value: 1}},
-			expected:      "SELECT * FROM `my_project_my_dataset_my_table` WHERE id = ?",
+			expected:      "SELECT * FROM `my_project.my_dataset.my_table` WHERE id = ?",
 			parametersOut: []bigquery.QueryParameter{{Value: 1}},
 		},
 		{
 			name:          "identifier replacement and positional parameter",
 			sql:           "SELECT * FROM $tablename WHERE id = ?",
 			parametersIn:  []bigquery.QueryParameter{{Name: "$tablename", Value: "my-project.my-dataset.my-table"}, {Value: 1}},
-			expected:      "SELECT * FROM `my_project_my_dataset_my_table` WHERE id = ?",
+			expected:      "SELECT * FROM `my_project.my_dataset.my_table` WHERE id = ?",
 			parametersOut: []bigquery.QueryParameter{{Value: 1}},
 		},
 		{
@@ -46,14 +47,14 @@ func TestQueryTranslateWithIdentifiers(t *testing.T) {
 			name:          "single identifier with multiple dots",
 			sql:           "SELECT * FROM $tablename WHERE id = 1",
 			parametersIn:  []bigquery.QueryParameter{{Name: "$tablename", Value: "my-project.my-dataset.my-table"}},
-			expected:      "SELECT * FROM `my_project_my_dataset_my_table` WHERE id = 1",
+			expected:      "SELECT * FROM `my_project.my_dataset.my_table` WHERE id = 1",
 			parametersOut: []bigquery.QueryParameter{},
 		},
 		{
 			name:          "multiple identifiers",
 			sql:           "SELECT * FROM $table1 JOIN $table2 ON $table1.id = $table2.id",
 			parametersIn:  []bigquery.QueryParameter{{Name: "$table1", Value: "dataset.table1"}, {Name: "$table2", Value: "dataset.table2"}},
-			expected:      "SELECT * FROM `dataset_table1` JOIN `dataset_table2` ON `dataset_table1`.id = `dataset_table2`.id",
+			expected:      "SELECT * FROM `dataset.table1` JOIN `dataset.table2` ON `dataset.table1`.id = `dataset.table2`.id",
 			parametersOut: []bigquery.QueryParameter{},
 		},
 		{
@@ -69,6 +70,27 @@ func TestQueryTranslateWithIdentifiers(t *testing.T) {
 			parametersIn:  []bigquery.QueryParameter{{Name: "$tablename", Value: "my-table"}, {Name: "@corpus", Value: "corpus_value"}},
 			expected:      "SELECT * FROM `my_table` WHERE corpus = @corpus",
 			parametersOut: []bigquery.QueryParameter{{Name: "corpus", Value: "corpus_value"}},
+		},
+		{
+			name:          "slice of identifiers",
+			sql:           "GRANT $roles ON DATASET `your_project.your_dataset` TO @user;",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$roles", Value: []string{"roles/bigquery.dataViewer", "roles/bigquery.dataEditor"}}, {Name: "@user", Value: "user@example.com"}},
+			expected:      "GRANT `roles/bigquery.dataViewer`, `roles/bigquery.dataEditor` ON DATASET `your_project.your_dataset` TO @user;",
+			parametersOut: []bigquery.QueryParameter{{Name: "user", Value: "user@example.com"}},
+		},
+		{
+			name:          "slice of parameter values",
+			sql:           "SELECT * FROM `my_table` WHERE corpus IN (@corpus)",
+			parametersIn:  []bigquery.QueryParameter{{Name: "@corpus", Value: []string{"value1", "value2"}}},
+			expected:      "SELECT * FROM `my_table` WHERE corpus IN (@corpus_1, @corpus_2)",
+			parametersOut: []bigquery.QueryParameter{{Name: "corpus_1", Value: "value1"}, {Name: "corpus_2", Value: "value2"}},
+		},
+		{
+			name:          "slice of parameter values ignored",
+			sql:           "SELECT * FROM `my_table` WHERE corpus IN (@corpus)",
+			parametersIn:  []bigquery.QueryParameter{{Name: "corpus", Value: []string{"value1", "value2"}}},
+			expected:      "SELECT * FROM `my_table` WHERE corpus IN (@corpus)",
+			parametersOut: []bigquery.QueryParameter{{Name: "corpus", Value: []string{"value1", "value2"}}},
 		},
 	}
 
@@ -96,7 +118,8 @@ func equalQueryParameters(a, b []bigquery.QueryParameter) bool {
 		if a[i].Name != b[i].Name {
 			return false
 		}
-		if a[i].Value != b[i].Value {
+		// deep compare Value
+		if fmt.Sprintf("%v", a[i].Value) != fmt.Sprintf("%v", b[i].Value) {
 			return false
 		}
 	}

@@ -6,7 +6,7 @@ import (
 )
 
 // characters that are allowed in unquoted identifiers
-const identifierChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
+const identifierChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_/."
 
 func filterIdentifierChars(s string) string {
 	return strings.Map(func(r rune) rune {
@@ -20,10 +20,20 @@ func filterIdentifierChars(s string) string {
 // QuoteIdentifier safely quotes a table identifier with backticks.
 // This is essential for DDL operations when table names contain hyphens,
 // special characters, or are reserved words in BigQuery.
-// Invalid characters (like hyphens, dots) are automatically converted to underscores.
-func quoteIdentifier(identifier interface{}) string {
+// Invalid characters (like hyphens) are automatically converted to underscores.
+func quoteIdentifier(identifier any) string {
 	// Replace any invalid characters with underscores
 	var result string
+	// Detect slice of any type
+	slice, ok := identifier.([]any)
+	if ok {
+		parts := make([]string, len(slice))
+		for i, part := range slice {
+			parts[i] = filterIdentifierChars(fmt.Sprintf("%v", part))
+		}
+		result = strings.Join(parts, "`, `")
+		return "`" + result + "`"
+	}
 	switch v := identifier.(type) {
 	case string:
 		result = filterIdentifierChars(v)

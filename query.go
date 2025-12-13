@@ -28,20 +28,38 @@ func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery
 
 	// Build parameters and identifiers map
 	parameters := map[string]bigquery.QueryParameter{}
-	identifiers := map[string]string{}
+	identifiers := map[string]any{}
 	allParams := []bigquery.QueryParameter{}
 	for _, p := range params {
 		paramName := p.Name
 		if len(paramName) > 0 {
 			switch paramName[0] {
 			case '@':
+				// detect slices of type []string
+				if slice, ok := p.Value.([]string); ok {
+					// for each entry in the slice, add a new parameter with _index suffix
+					replace := []string{}
+					for i, newParamValue := range slice {
+						newParamName := fmt.Sprintf("%s_%d", paramName, i+1)
+						newParam := bigquery.QueryParameter{
+							Name:  newParamName[1:], // remove @ prefix
+							Value: newParamValue,
+						}
+						replace = append(replace, newParamName)
+						parameters[newParamName] = newParam
+						allParams = append(allParams, newParam)
+					}
+					sql = strings.ReplaceAll(sql, paramName, strings.Join(replace, ", "))
+					continue
+				}
+				// normal @param case
 				p.Name = paramName[1:]
 				parameters[paramName] = p
 				allParams = append(allParams, p)
 			case '$':
-				identifiers[paramName] = fmt.Sprintf("%v", p.Value)
+				identifiers[paramName] = p.Value
 			default: // assume @ prefix
-				parameters[paramName] = p
+				parameters["@"+paramName] = p
 				allParams = append(allParams, p)
 			}
 		} else {
