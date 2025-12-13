@@ -32,12 +32,12 @@ statements. You're forced to use string concatenation, which is:
 
 ```go
 // Instead of unsafe string concatenation:
-sql := fmt.Sprintf("SELECT * FROM `%s` WHERE id = 1", unsafeTableName)
+sql := fmt.Sprintf("SELECT * FROM `%s` WHERE id = 1", unsafetable)
 
 // Use safe $ parameters:
-sql := "SELECT * FROM $tablename WHERE id = 1"
+sql := "SELECT * FROM $table WHERE id = 1"
 q.Parameters = []bigquery.QueryParameter{
-    {Name: "$tablename", Value: "my-project.my-dataset.my-table"},
+    {Name: "$table", Value: "my-project.my-dataset.my-table"},
 }
 ```
 
@@ -62,11 +62,11 @@ ctx := context.Background()
 client, _ := saferbq.NewClient(ctx, "my-project")
 defer client.Close()
 
-// $tablename will be replaced with `my_project.my_dataset.my_table`
-sql := "SELECT * FROM $tablename WHERE id = 1"
+// $table will be replaced with `my_project.my_dataset.my_table`
+sql := "SELECT * FROM $table WHERE id = 1"
 q := client.Query(sql)
 q.Parameters = []bigquery.QueryParameter{
-    {Name: "$tablename", Value: "my-project.my-dataset.my-table"},
+    {Name: "$table", Value: "my-project.my-dataset.my-table"},
 }
 
 it, _ := q.Read(ctx)
@@ -76,12 +76,12 @@ it, _ := q.Read(ctx)
 ### Mixing $ Identifiers with @ Parameters
 
 ```go
-// $tablename becomes a quoted identifier
+// $table becomes a quoted identifier
 // @corpus stays as a BigQuery parameter (safe for data values)
-sql := "SELECT * FROM $tablename WHERE corpus = @corpus"
+sql := "SELECT * FROM $table WHERE corpus = @corpus"
 q := client.Query(sql)
 q.Parameters = []bigquery.QueryParameter{
-    {Name: "$tablename", Value: "my-table"},
+    {Name: "$table", Value: "my-table"},
     {Name: "@corpus", Value: "en-US"},
 }
 
@@ -94,14 +94,14 @@ Perfect for CREATE/ALTER/DROP statements where identifiers can't be
 parameterized:
 
 ```go
-sql := `CREATE TABLE IF NOT EXISTS $tablename (
+sql := `CREATE TABLE IF NOT EXISTS $table (
     id INT64,
     name STRING,
     created_at TIMESTAMP
 )`
 q := client.Query(sql)
 q.Parameters = []bigquery.QueryParameter{
-    {Name: "$tablename", Value: "my-dataset.my-new-table"},
+    {Name: "$table", Value: "my-dataset.my-new-table"},
 }
 
 job, _ := q.Run(ctx)
@@ -153,7 +153,7 @@ q.Parameters = []bigquery.QueryParameter{
 
 | Syntax        | Purpose                  | Example        | Result                        |
 | ------------- | ------------------------ | -------------- | ----------------------------- |
-| `$identifier` | Table/dataset names      | `$tablename`   | `` `my_table` ``              |
+| `$identifier` | Table/dataset names      | `$table`       | `` `my_table` ``              |
 | `@parameter`  | Data values (named)      | `@user_id`     | `@user_id` (BigQuery handles) |
 | `?`           | Data values (positional) | `WHERE id = ?` | `?` (BigQuery handles)        |
 
