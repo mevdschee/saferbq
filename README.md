@@ -100,8 +100,7 @@ defer client.Close()
 The `$table` parameter will be replaced with `myproject.mydataset.mytable`
 
 ```go
-sql := "SELECT * FROM $table WHERE id = 1"
-q := client.Query(sql)
+q := client.Query("SELECT * FROM $table WHERE id = 1")
 q.Parameters = []bigquery.QueryParameter{
     {Name: "$table", Value: "myproject.mydataset.mytable"},
 }
@@ -116,8 +115,7 @@ The `$table` parameter becomes a quoted identifier, while the `@corpus`
 parameter stays as a BigQuery parameter (which is safe for data values).
 
 ```go
-sql := "SELECT * FROM $table WHERE corpus = @corpus"
-q := client.Query(sql)
+q := client.Query("SELECT * FROM $table WHERE corpus = @corpus")
 q.Parameters = []bigquery.QueryParameter{
     {Name: "$table", Value: "mytable"},
     {Name: "@corpus", Value: "en-US"},
@@ -132,8 +130,7 @@ job, _ := q.Run(ctx)
 You can mix the named parameters with positional parameters.
 
 ```go
-sql := "SELECT * FROM $project.$dataset.$table WHERE id = ? AND status = ?"
-q := client.Query(sql)
+q := client.Query("SELECT * FROM $project.$dataset.$table WHERE id = ? AND status = ?")
 q.Parameters = []bigquery.QueryParameter{
     {Name: "$project", Value: "myproject"},
     {Name: "$dataset", Value: "mydataset"},
