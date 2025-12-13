@@ -226,18 +226,18 @@ The actual identifier values you provide must follow
 Examples of valid identifier values:
 
 ```go
-{Name: "$table", Value: "my-table"}    // ✅ Dashes allowed
-{Name: "$table", Value: "my table"}    // ✅ Spaces allowed
-{Name: "$table", Value: "table_123"}   // ✅ Underscores and numbers allowed
-{Name: "$table", Value: "表格"}         // ✅ Unicode letters allowed
+{Name: "$table", Value: "my-table"}    // Dashes allowed
+{Name: "$table", Value: "my table"}    // Spaces allowed
+{Name: "$table", Value: "table_123"}   // Underscores and numbers allowed
+{Name: "$table", Value: "表格"}         // Unicode letters allowed
 ```
 
 Examples that will cause errors:
 
 ```go
-{Name: "$table", Value: "table`; DROP TABLE"} // ❌ Error: invalid characters: `;`
-{Name: "$table", Value: "my.table"}           // ❌ Error: invalid characters: `.`
-{Name: "$table", Value: "table/name"}         // ❌ Error: invalid characters: `/`
+{Name: "$table", Value: "table`; DROP TABLE"} // Error: invalid characters: `;`
+{Name: "$table", Value: "my.table"}           // Error: invalid characters: `.`
+{Name: "$table", Value: "table/name"}         // Error: invalid characters: `/`
 ```
 
 Invalid characters include: ``!"#$%&'()*+,./:;<=>?@[\]^`{|}~`` and others
