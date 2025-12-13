@@ -6,63 +6,62 @@ import (
 
 func TestQuoteIdentifier(t *testing.T) {
 	tests := []struct {
-		name       string
-		identifier interface{}
-		expectErr  string
-		expected   string
+		name          string
+		identifierIn  any
+		identifierOut string
 	}{
 		{
-			name:       "empty",
-			identifier: "",
-			expected:   "``",
+			name:          "empty",
+			identifierIn:  "",
+			identifierOut: "``",
 		},
 		{
-			name:       "simple",
-			identifier: "mytable",
-			expected:   "`mytable`",
+			name:          "simple",
+			identifierIn:  "mytable",
+			identifierOut: "`mytable`",
 		},
 		{
-			name:       "with hyphen",
-			identifier: "my-table",
-			expected:   "`my_table`",
+			name:          "with hyphen",
+			identifierIn:  "my-table",
+			identifierOut: "`my_table`",
 		},
 		{
-			name:       "with dot",
-			identifier: "my.dataset.table",
-			expected:   "`my.dataset.table`",
+			name:          "with dot",
+			identifierIn:  "my.dataset.table",
+			identifierOut: "`my.dataset.table`",
 		},
 		{
-			name:       "with slashes",
-			identifier: "my/dataset/table",
-			expected:   "`my/dataset/table`",
+			name:          "with slashes",
+			identifierIn:  "my/dataset/table",
+			identifierOut: "`my/dataset/table`",
 		},
 		{
-			name:       "with special chars",
-			identifier: "my$table@name!",
-			expected:   "`my_table_name_`",
+			name:          "with special chars",
+			identifierIn:  "my$table@name!",
+			identifierOut: "`my_table_name_`",
 		},
 		{
-			name:       "already quoted",
-			identifier: "`mytable`",
-			expected:   "`_mytable_`",
+			name:          "already quoted",
+			identifierIn:  "`mytable`",
+			identifierOut: "`_mytable_`",
 		},
+		//{
+		//	name:          "slice of strings",
+		//	identifierIn:  []string{"my-project", "my-dataset", "my-table"},
+		//	identifierOut: "`my_project`, `my_dataset`, `my_table`",
+		//},
 		{
-			name:       "slice of strings",
-			identifier: []string{"my-project", "my-dataset", "my-table"},
-			expected:   "`my_project`, `my_dataset`, `my_table`",
-		},
-		{
-			name:       "non-string identifier",
-			identifier: 12345,
-			expected:   "`12345`",
+			name:          "non-string identifier",
+			identifierIn:  12345,
+			identifierOut: "`12345`",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := quoteIdentifier(tt.identifier)
-			if result != tt.expected {
-				t.Errorf("quoteIdentifier(%v) = %q, want %q", tt.identifier, result, tt.expected)
+			identifierOut := quoteIdentifier(tt.identifierIn)
+			if identifierOut != tt.identifierOut {
+				t.Errorf("quoteIdentifier(%v) = %q, want %q", tt.identifierIn, identifierOut, tt.identifierOut)
 			}
 		})
 	}

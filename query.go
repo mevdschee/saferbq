@@ -35,32 +35,31 @@ func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery
 		if len(paramName) > 0 {
 			switch paramName[0] {
 			case '@':
-				// detect slices of type []string
-				if slice, ok := p.Value.([]string); ok {
-					// for each entry in the slice, add a new parameter with _index suffix
-					replace := []string{}
-					for i, newParamValue := range slice {
-						newParamName := fmt.Sprintf("%s_%d", paramName, i+1)
-						newParam := bigquery.QueryParameter{
-							Name:  newParamName[1:], // remove @ prefix
-							Value: newParamValue,
-						}
-						replace = append(replace, newParamName)
-						parameters[newParamName] = newParam
-						allParams = append(allParams, newParam)
-					}
-					sql = strings.ReplaceAll(sql, paramName, strings.Join(replace, ", "))
-					continue
-				}
+				//// detect slices of type []string
+				//if slice, ok := p.Value.([]string); ok {
+				//	// for each entry in the slice, add a new parameter with _index suffix
+				//	replace := []string{}
+				//	for i, newParamValue := range slice {
+				//		newParamName := fmt.Sprintf("%s_%d", paramName, i+1)
+				//		newParam := bigquery.QueryParameter{
+				//			Name:  newParamName[1:], // remove @ prefix
+				//			Value: newParamValue,
+				//		}
+				//		replace = append(replace, newParamName)
+				//		parameters[newParamName] = newParam
+				//		allParams = append(allParams, newParam)
+				//	}
+				//	sql = strings.ReplaceAll(sql, paramName, strings.Join(replace, ", "))
+				//	continue
+				//}
 				// normal @param case
 				p.Name = paramName[1:]
 				parameters[paramName] = p
 				allParams = append(allParams, p)
 			case '$':
 				identifiers[paramName] = p.Value
-			default: // assume @ prefix
-				parameters["@"+paramName] = p
-				allParams = append(allParams, p)
+			default:
+				return "", nil, fmt.Errorf("invalid parameter name %s: must start with @ or $", paramName)
 			}
 		} else {
 			allParams = append(allParams, p)
@@ -83,27 +82,27 @@ func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery
 	// Detect parameters not present in the original SQL and return error
 	for paramName := range parameters {
 		if _, exists := parametersInSql[paramName]; !exists {
-			return "", []bigquery.QueryParameter{}, fmt.Errorf("parameter %s not found in query", paramName)
+			return "", nil, fmt.Errorf("parameter %s not found in query", paramName)
 		}
 	}
 	// Detect parameters not present in the parameters slice and return error
 	for paramName := range parametersInSql {
 		_, exists := parameters[paramName]
 		if !exists {
-			return "", []bigquery.QueryParameter{}, fmt.Errorf("parameter %s not provided in parameters", paramName)
+			return "", nil, fmt.Errorf("parameter %s not provided in parameters", paramName)
 		}
 	}
 	// Detect identifiers not present in the original SQL and return error
 	for identifier := range identifiers {
 		if _, exists := identifiersInSql[identifier]; !exists {
-			return "", []bigquery.QueryParameter{}, fmt.Errorf("identifier %s not found in query", identifier)
+			return "", nil, fmt.Errorf("identifier %s not found in query", identifier)
 		}
 	}
 	// Detect identifiers not present in the identifiers map and return error
 	for identifier := range identifiersInSql {
 		_, exists := identifiers[identifier]
 		if !exists {
-			return "", []bigquery.QueryParameter{}, fmt.Errorf("identifier %s not provided in identifiers", identifier)
+			return "", nil, fmt.Errorf("identifier %s not provided in parameters", identifier)
 		}
 	}
 	// Apply all replacements

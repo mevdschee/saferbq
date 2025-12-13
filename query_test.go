@@ -7,104 +7,245 @@ import (
 	"cloud.google.com/go/bigquery"
 )
 
-func TestQueryTranslateWithIdentifiers(t *testing.T) {
+func TestQueryTranslate(t *testing.T) {
 	tests := []struct {
 		name          string
-		sql           string
+		sqlIn         string
 		parametersIn  []bigquery.QueryParameter
-		expected      string
+		sqlOut        string
 		parametersOut []bigquery.QueryParameter
+		errorMessage  string
 	}{
 		{
 			name:          "identifier replacement only",
-			sql:           "SELECT * FROM $tablename WHERE id = 1",
+			sqlIn:         "SELECT * FROM $tablename WHERE id = 1",
 			parametersIn:  []bigquery.QueryParameter{{Name: "$tablename", Value: "myproject.mydataset.mytable"}},
-			expected:      "SELECT * FROM `myproject.mydataset.mytable` WHERE id = 1",
+			sqlOut:        "SELECT * FROM `myproject.mydataset.mytable` WHERE id = 1",
 			parametersOut: []bigquery.QueryParameter{},
 		},
 		{
 			name:          "identifier replacement and positional parameter",
-			sql:           "SELECT * FROM $tablename WHERE id = ?",
+			sqlIn:         "SELECT * FROM $tablename WHERE id = ?",
 			parametersIn:  []bigquery.QueryParameter{{Name: "$tablename", Value: "myproject.mydataset.mytable"}, {Value: 1}},
-			expected:      "SELECT * FROM `myproject.mydataset.mytable` WHERE id = ?",
+			sqlOut:        "SELECT * FROM `myproject.mydataset.mytable` WHERE id = ?",
 			parametersOut: []bigquery.QueryParameter{{Value: 1}},
 		},
 		{
 			name:          "identifier replacement and positional parameter",
-			sql:           "SELECT * FROM $tablename WHERE id = ?",
+			sqlIn:         "SELECT * FROM $tablename WHERE id = ?",
 			parametersIn:  []bigquery.QueryParameter{{Name: "$tablename", Value: "myproject.mydataset.mytable"}, {Value: 1}},
-			expected:      "SELECT * FROM `myproject.mydataset.mytable` WHERE id = ?",
+			sqlOut:        "SELECT * FROM `myproject.mydataset.mytable` WHERE id = ?",
 			parametersOut: []bigquery.QueryParameter{{Value: 1}},
 		},
 		{
 			name:          "multiple identifiers with a dot",
-			sql:           "SELECT * FROM $project.$dataset.$table WHERE id = 1",
+			sqlIn:         "SELECT * FROM $project.$dataset.$table WHERE id = 1",
 			parametersIn:  []bigquery.QueryParameter{{Name: "$project", Value: "myproject"}, {Name: "$dataset", Value: "mydataset"}, {Name: "$table", Value: "mytable"}},
-			expected:      "SELECT * FROM `myproject`.`mydataset`.`mytable` WHERE id = 1",
+			sqlOut:        "SELECT * FROM `myproject`.`mydataset`.`mytable` WHERE id = 1",
 			parametersOut: []bigquery.QueryParameter{},
 		},
 		{
 			name:          "single identifier with multiple dots",
-			sql:           "SELECT * FROM $tablename WHERE id = 1",
+			sqlIn:         "SELECT * FROM $tablename WHERE id = 1",
 			parametersIn:  []bigquery.QueryParameter{{Name: "$tablename", Value: "myproject.mydataset.mytable"}},
-			expected:      "SELECT * FROM `myproject.mydataset.mytable` WHERE id = 1",
+			sqlOut:        "SELECT * FROM `myproject.mydataset.mytable` WHERE id = 1",
 			parametersOut: []bigquery.QueryParameter{},
 		},
 		{
 			name:          "multiple identifiers",
-			sql:           "SELECT * FROM $table1 JOIN $table2 ON $table1.id = $table2.id",
+			sqlIn:         "SELECT * FROM $table1 JOIN $table2 ON $table1.id = $table2.id",
 			parametersIn:  []bigquery.QueryParameter{{Name: "$table1", Value: "dataset.table1"}, {Name: "$table2", Value: "dataset.table2"}},
-			expected:      "SELECT * FROM `dataset.table1` JOIN `dataset.table2` ON `dataset.table1`.id = `dataset.table2`.id",
+			sqlOut:        "SELECT * FROM `dataset.table1` JOIN `dataset.table2` ON `dataset.table1`.id = `dataset.table2`.id",
 			parametersOut: []bigquery.QueryParameter{},
 		},
 		{
 			name:          "@ parameter stays unchanged",
-			sql:           "SELECT * FROM table WHERE corpus = @corpus",
+			sqlIn:         "SELECT * FROM table WHERE corpus = @corpus",
 			parametersIn:  []bigquery.QueryParameter{{Name: "@corpus", Value: "corpus_value"}},
-			expected:      "SELECT * FROM table WHERE corpus = @corpus",
+			sqlOut:        "SELECT * FROM table WHERE corpus = @corpus",
 			parametersOut: []bigquery.QueryParameter{{Name: "corpus", Value: "corpus_value"}},
 		},
 		{
 			name:          "mixed @ and $ parameters",
-			sql:           "SELECT * FROM $tablename WHERE corpus = @corpus",
+			sqlIn:         "SELECT * FROM $tablename WHERE corpus = @corpus",
 			parametersIn:  []bigquery.QueryParameter{{Name: "$tablename", Value: "mytable"}, {Name: "@corpus", Value: "corpus_value"}},
-			expected:      "SELECT * FROM `mytable` WHERE corpus = @corpus",
+			sqlOut:        "SELECT * FROM `mytable` WHERE corpus = @corpus",
 			parametersOut: []bigquery.QueryParameter{{Name: "corpus", Value: "corpus_value"}},
 		},
+		// TODO: slice of identifiers not yet supported
+		//{
+		//	name:          "slice of identifiers",
+		//	sqlIn:         "GRANT $roles ON DATASET `your_project.your_dataset` TO @user;",
+		//	parametersIn:  []bigquery.QueryParameter{{Name: "$roles", Value: []string{"roles/bigquery.dataViewer", "roles/bigquery.dataEditor"}}, {Name: "@user", Value: "user@example.com"}},
+		//	sqlOut:        "GRANT `roles/bigquery.dataViewer`, `roles/bigquery.dataEditor` ON DATASET `your_project.your_dataset` TO @user;",
+		//	parametersOut: []bigquery.QueryParameter{{Name: "user", Value: "user@example.com"}},
+		//},
+		// TODO: slice expansion for parameters not yet supported
+		//{
+		//	name:          "slice of parameter values",
+		//	sqlIn:         "SELECT * FROM `mytable` WHERE corpus IN (@corpus)",
+		//	parametersIn:  []bigquery.QueryParameter{{Name: "@corpus", Value: []string{"value1", "value2"}}},
+		//	sqlOut:        "SELECT * FROM `mytable` WHERE corpus IN (@corpus_1, @corpus_2)",
+		//	parametersOut: []bigquery.QueryParameter{{Name: "corpus_1", Value: "value1"}, {Name: "corpus_2", Value: "value2"}},
+		//},
+		// Error cases
 		{
-			name:          "slice of identifiers",
-			sql:           "GRANT $roles ON DATASET `your_project.your_dataset` TO @user;",
-			parametersIn:  []bigquery.QueryParameter{{Name: "$roles", Value: []string{"roles/bigquery.dataViewer", "roles/bigquery.dataEditor"}}, {Name: "@user", Value: "user@example.com"}},
-			expected:      "GRANT `roles/bigquery.dataViewer`, `roles/bigquery.dataEditor` ON DATASET `your_project.your_dataset` TO @user;",
-			parametersOut: []bigquery.QueryParameter{{Name: "user", Value: "user@example.com"}},
+			name:         "missing identifier parameter",
+			sqlIn:        "SELECT * FROM $tablename WHERE id = 1",
+			parametersIn: []bigquery.QueryParameter{},
+			errorMessage: "identifier $tablename not provided in parameters",
 		},
 		{
-			name:          "slice of parameter values",
-			sql:           "SELECT * FROM `mytable` WHERE corpus IN (@corpus)",
-			parametersIn:  []bigquery.QueryParameter{{Name: "@corpus", Value: []string{"value1", "value2"}}},
-			expected:      "SELECT * FROM `mytable` WHERE corpus IN (@corpus_1, @corpus_2)",
-			parametersOut: []bigquery.QueryParameter{{Name: "corpus_1", Value: "value1"}, {Name: "corpus_2", Value: "value2"}},
+			name:         "missing @ parameter",
+			sqlIn:        "SELECT * FROM table WHERE corpus = @corpus",
+			parametersIn: []bigquery.QueryParameter{},
+			errorMessage: "parameter @corpus not provided in parameters",
 		},
 		{
-			name:          "slice of parameter values ignored",
-			sql:           "SELECT * FROM `mytable` WHERE corpus IN (@corpus)",
-			parametersIn:  []bigquery.QueryParameter{{Name: "corpus", Value: []string{"value1", "value2"}}},
-			expected:      "SELECT * FROM `mytable` WHERE corpus IN (@corpus)",
-			parametersOut: []bigquery.QueryParameter{{Name: "corpus", Value: []string{"value1", "value2"}}},
+			name:         "extra identifier parameter",
+			sqlIn:        "SELECT * FROM table WHERE id = 1",
+			parametersIn: []bigquery.QueryParameter{{Name: "$tablename", Value: "mytable"}},
+			errorMessage: "identifier $tablename not found in query",
+		},
+		{
+			name:         "extra @ parameter",
+			sqlIn:        "SELECT * FROM table WHERE id = 1",
+			parametersIn: []bigquery.QueryParameter{{Name: "@corpus", Value: "corpus_value"}},
+			errorMessage: "parameter @corpus not found in query",
+		},
+		{
+			name:         "invalid parameter name",
+			sqlIn:        "SELECT * FROM table WHERE id = 1",
+			parametersIn: []bigquery.QueryParameter{{Name: "corpus", Value: "corpus_value"}},
+			errorMessage: "invalid parameter name corpus: must start with @ or $",
+		},
+		// Test cases from documentation examples
+		{
+			name:          "positional params from doc - shakespeare corpus",
+			sqlIn:         "SELECT word, word_count FROM $table WHERE corpus = ? AND word_count >= ? ORDER BY word_count DESC",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "bigquery-public-data.samples.shakespeare"}, {Value: "romeoandjuliet"}, {Value: 250}},
+			sqlOut:        "SELECT word, word_count FROM `bigquery_public_data.samples.shakespeare` WHERE corpus = ? AND word_count >= ? ORDER BY word_count DESC",
+			parametersOut: []bigquery.QueryParameter{{Value: "romeoandjuliet"}, {Value: 250}},
+		},
+		{
+			name:          "array params from doc - usa names",
+			sqlIn:         "SELECT name, sum(number) as count FROM $table WHERE gender = @gender AND state IN UNNEST(@states) GROUP BY name ORDER BY count DESC LIMIT 10",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "bigquery-public-data.usa_names.usa_1910_2013"}, {Name: "@gender", Value: "M"}, {Name: "@states", Value: []string{"WA", "WI", "WV", "WY"}}},
+			sqlOut:        "SELECT name, sum(number) as count FROM `bigquery_public_data.usa_names.usa_1910_2013` WHERE gender = @gender AND state IN UNNEST(@states) GROUP BY name ORDER BY count DESC LIMIT 10",
+			parametersOut: []bigquery.QueryParameter{{Name: "gender", Value: "M"}, {Name: "states", Value: []string{"WA", "WI", "WV", "WY"}}},
+		},
+		{
+			name:          "basic query from doc - texas names",
+			sqlIn:         "SELECT name FROM $table WHERE state = @state LIMIT 100",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "bigquery-public-data.usa_names.usa_1910_2013"}, {Name: "@state", Value: "TX"}},
+			sqlOut:        "SELECT name FROM `bigquery_public_data.usa_names.usa_1910_2013` WHERE state = @state LIMIT 100",
+			parametersOut: []bigquery.QueryParameter{{Name: "state", Value: "TX"}},
+		},
+		{
+			name:          "batch query from doc - aggregate shakespeare",
+			sqlIn:         "SELECT corpus, SUM(word_count) as total_words, COUNT(1) as unique_words FROM $table GROUP BY corpus",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "bigquery-public-data.samples.shakespeare"}},
+			sqlOut:        "SELECT corpus, SUM(word_count) as total_words, COUNT(1) as unique_words FROM `bigquery_public_data.samples.shakespeare` GROUP BY corpus",
+			parametersOut: []bigquery.QueryParameter{},
+		},
+		{
+			name:          "query from doc - usa names aggregate",
+			sqlIn:         "SELECT name, gender, SUM(number) AS total FROM $table GROUP BY name, gender ORDER BY total DESC LIMIT 10",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "bigquery-public-data.usa_names.usa_1910_2013"}},
+			sqlOut:        "SELECT name, gender, SUM(number) AS total FROM `bigquery_public_data.usa_names.usa_1910_2013` GROUP BY name, gender ORDER BY total DESC LIMIT 10",
+			parametersOut: []bigquery.QueryParameter{},
+		},
+		{
+			name:          "dry run query from doc - name count by state",
+			sqlIn:         "SELECT name, COUNT(*) as name_count FROM $table WHERE state = @state GROUP BY name",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "bigquery-public-data.usa_names.usa_1910_2013"}, {Name: "@state", Value: "WA"}},
+			sqlOut:        "SELECT name, COUNT(*) as name_count FROM `bigquery_public_data.usa_names.usa_1910_2013` WHERE state = @state GROUP BY name",
+			parametersOut: []bigquery.QueryParameter{{Name: "state", Value: "WA"}}},
+		{
+			name:          "create table with identifiers",
+			sqlIn:         "CREATE TABLE IF NOT EXISTS $dataset.$table (id INT64, name STRING, created_at TIMESTAMP)",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$dataset", Value: "mydataset"}, {Name: "$table", Value: "mynew-table"}},
+			sqlOut:        "CREATE TABLE IF NOT EXISTS `mydataset`.`mynew_table` (id INT64, name STRING, created_at TIMESTAMP)",
+			parametersOut: []bigquery.QueryParameter{},
+		},
+		{
+			name:          "delete with identifier",
+			sqlIn:         "DELETE FROM $table WHERE id = @id",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "mydataset.mytable"}, {Name: "@id", Value: 1}},
+			sqlOut:        "DELETE FROM `mydataset.mytable` WHERE id = @id",
+			parametersOut: []bigquery.QueryParameter{{Name: "id", Value: 1}},
+		},
+		{
+			name:          "update with identifier",
+			sqlIn:         "UPDATE $table SET status = @status WHERE id = @id",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "mydataset.mytable"}, {Name: "@status", Value: "active"}, {Name: "@id", Value: 1}},
+			sqlOut:        "UPDATE `mydataset.mytable` SET status = @status WHERE id = @id",
+			parametersOut: []bigquery.QueryParameter{{Name: "status", Value: "active"}, {Name: "id", Value: 1}},
+		},
+		{
+			name:          "insert with identifier",
+			sqlIn:         "INSERT INTO $table (id, name) VALUES (@id, @name)",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "mydataset.mytable"}, {Name: "@id", Value: 1}, {Name: "@name", Value: "test"}},
+			sqlOut:        "INSERT INTO `mydataset.mytable` (id, name) VALUES (@id, @name)",
+			parametersOut: []bigquery.QueryParameter{{Name: "id", Value: 1}, {Name: "name", Value: "test"}},
+		},
+		{
+			name:          "with cte and identifier",
+			sqlIn:         "WITH cte AS (SELECT * FROM $table WHERE active = true) SELECT * FROM cte",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "mydataset.mytable"}},
+			sqlOut:        "WITH cte AS (SELECT * FROM `mydataset.mytable` WHERE active = true) SELECT * FROM cte",
+			parametersOut: []bigquery.QueryParameter{},
+		},
+		{
+			name:          "union with identifiers",
+			sqlIn:         "SELECT * FROM $table1 UNION ALL SELECT * FROM $table2",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table1", Value: "dataset.table1"}, {Name: "$table2", Value: "dataset.table2"}},
+			sqlOut:        "SELECT * FROM `dataset.table1` UNION ALL SELECT * FROM `dataset.table2`",
+			parametersOut: []bigquery.QueryParameter{},
+		},
+		{
+			name:          "subquery with identifier",
+			sqlIn:         "SELECT * FROM (SELECT id FROM $table WHERE status = @status) WHERE id > @id",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "mydataset.mytable"}, {Name: "@status", Value: "active"}, {Name: "@id", Value: 100}},
+			sqlOut:        "SELECT * FROM (SELECT id FROM `mydataset.mytable` WHERE status = @status) WHERE id > @id",
+			parametersOut: []bigquery.QueryParameter{{Name: "status", Value: "active"}, {Name: "id", Value: 100}},
+		},
+		{
+			name:          "window function with identifier",
+			sqlIn:         "SELECT id, ROW_NUMBER() OVER (ORDER BY created_at) as row_num FROM $table",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "mydataset.mytable"}},
+			sqlOut:        "SELECT id, ROW_NUMBER() OVER (ORDER BY created_at) as row_num FROM `mydataset.mytable`",
+			parametersOut: []bigquery.QueryParameter{},
+		},
+		{
+			name:          "case statement with identifier and params",
+			sqlIn:         "SELECT id, CASE WHEN status = @status1 THEN 'active' WHEN status = @status2 THEN 'inactive' END as status_label FROM $table",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "mydataset.mytable"}, {Name: "@status1", Value: 1}, {Name: "@status2", Value: 0}},
+			sqlOut:        "SELECT id, CASE WHEN status = @status1 THEN 'active' WHEN status = @status2 THEN 'inactive' END as status_label FROM `mydataset.mytable`",
+			parametersOut: []bigquery.QueryParameter{{Name: "status1", Value: 1}, {Name: "status2", Value: 0}},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, paramsOut, err := translate(tt.sql, tt.parametersIn)
+			sqlOut, parametersOut, err := translate(tt.sqlIn, tt.parametersIn)
 			if err != nil {
-				t.Fatalf("translate() error = %v", err)
+				if tt.errorMessage == "" {
+					t.Fatalf("translate() unexpected error: %v", err)
+				}
+				if err.Error() != tt.errorMessage {
+					t.Fatalf("translate() error = %q, want %q", err.Error(), tt.errorMessage)
+				}
+			} else {
+				if tt.errorMessage != "" {
+					t.Fatalf("translate() expected error %q but got none", tt.errorMessage)
+				}
 			}
-			if !equalQueryParameters(paramsOut, tt.parametersOut) {
-				t.Errorf("translate() parametersOut = %v, want %v", paramsOut, tt.parametersOut)
+			if !equalQueryParameters(parametersOut, tt.parametersOut) {
+				t.Errorf("translate() parametersOut = %v, want %v", parametersOut, tt.parametersOut)
 			}
-			if result != tt.expected {
-				t.Errorf("translate() = %q, want %q", result, tt.expected)
+			if sqlOut != tt.sqlOut {
+				t.Errorf("translate() = %q, want %q", sqlOut, tt.sqlOut)
 			}
 		})
 	}

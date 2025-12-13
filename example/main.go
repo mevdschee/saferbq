@@ -42,9 +42,7 @@ func main() {
 }
 
 func queryWithIdentifiers(ctx context.Context, client *saferbq.Client) {
-	// $table gets replaced with quoted identifier: `mytable`
-	// NB: Special characters (hyphens) are automatically converted
-	// to underscores
+	// Simple query with $ identifier
 	sql := "SELECT * FROM $table WHERE id = 1"
 	q := client.Query(sql)
 	q.Parameters = []bigquery.QueryParameter{
@@ -76,7 +74,7 @@ func queryWithIdentifiers(ctx context.Context, client *saferbq.Client) {
 }
 
 func mixedParameters(ctx context.Context, client *saferbq.Client) {
-	// $table is replaced with identifier, @corpus stays as native BigQuery parameter
+	// Mix of $ identifiers and @ parameters
 	sql := "SELECT * FROM $table WHERE corpus = @corpus"
 	q := client.Query(sql)
 	q.Parameters = []bigquery.QueryParameter{
@@ -112,7 +110,7 @@ func mixedParameters(ctx context.Context, client *saferbq.Client) {
 }
 
 func queryPositionalParams(ctx context.Context, client *saferbq.Client) {
-	// $table with identifier, ? for positional parameters
+	// Mix of $ identifiers and ? positional parameters
 	sql := "SELECT * FROM $project.$dataset.$table WHERE id = ?"
 	q := client.Query(sql)
 	q.Parameters = []bigquery.QueryParameter{
@@ -155,8 +153,7 @@ func queryPositionalParams(ctx context.Context, client *saferbq.Client) {
 }
 
 func ddlOperations(ctx context.Context, client *saferbq.Client) {
-	// DDL operations use $-syntax for table identifiers that need to be quoted
-	// This is perfect for tables with hyphens or reserved words
+	// DDL operations use $-syntax for table identifiers
 	sql := `CREATE TABLE IF NOT EXISTS $dataset.$table (
 		id INT64,
 		name STRING,

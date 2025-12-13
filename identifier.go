@@ -24,26 +24,16 @@ func filterIdentifierChars(s string) string {
 func quoteIdentifier(identifier any) string {
 	// Replace any invalid characters with underscores
 	var result string
-	// Detect slice of any type
-	slice, ok := identifier.([]any)
-	if ok {
-		parts := make([]string, len(slice))
-		for i, part := range slice {
-			parts[i] = filterIdentifierChars(fmt.Sprintf("%v", part))
-		}
-		result = strings.Join(parts, "`, `")
-		return "`" + result + "`"
-	}
 	switch v := identifier.(type) {
 	case string:
 		result = filterIdentifierChars(v)
-	case []string:
-		// foreach entry in the slice, filter chars and join with underscore
-		parts := make([]string, len(v))
-		for i, part := range v {
-			parts[i] = filterIdentifierChars(part)
-		}
-		result = strings.Join(parts, "`, `")
+	//case []string:
+	//	// foreach entry in the slice, filter chars and join with underscore
+	//	parts := make([]string, len(v))
+	//	for i, part := range v {
+	//		parts[i] = filterIdentifierChars(part)
+	//	}
+	//	result = strings.Join(parts, "`, `")
 	default:
 		result = filterIdentifierChars(fmt.Sprintf("%v", identifier))
 	}
