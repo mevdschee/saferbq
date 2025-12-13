@@ -36,7 +36,7 @@ q.Parameters = []bigquery.QueryParameter{
 
 ### SQL Injection Attack
 
-String concatenation in SQL is unsafe, vulnerable to SQL injection:
+String concatenation in SQL is unsafe, as it is vulnerable to SQL injection:
 
 ```go
 client := bigquery.NewClient(ctx, "myproject")
