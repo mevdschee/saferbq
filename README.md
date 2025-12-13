@@ -254,6 +254,75 @@ or `roles/bigquery.dataViewer`, use 3 separate parameters.
   long parameters
 - **Drop-in Replacement**: Same API as official BigQuery SDK
 
+## Error Handling
+
+The package provides sentinel errors that can be checked using `errors.Is()` for
+better error handling:
+
+```go
+import (
+    "errors"
+    "github.com/mevdschee/saferbq"
+)
+
+q := client.Query("SELECT * FROM $table WHERE id = 1")
+q.Parameters = []bigquery.QueryParameter{
+    {Name: "$table", Value: "my`table"},
+}
+
+_, err := q.Run(ctx)
+if errors.Is(err, saferbq.ErrIdentifierInvalidChars) {
+    // Handle invalid character error
+    log.Printf("Invalid table name provided: %v", err)
+}
+```
+
+### Available Sentinel Errors
+
+| Error                          | Description                                        |
+| ------------------------------ | -------------------------------------------------- |
+| `ErrInvalidParameterName`      | Parameter name doesn't start with `@` or `$`       |
+| `ErrParameterNotFound`         | Parameter in params slice not found in query       |
+| `ErrParameterNotProvided`      | Parameter in query not provided in params slice    |
+| `ErrIdentifierNotFound`        | Identifier in params slice not found in query      |
+| `ErrIdentifierNotProvided`     | Identifier in query not provided in params slice   |
+| `ErrIdentifierEmpty`           | Identifier value is empty                          |
+| `ErrIdentifierTooLong`         | Identifier exceeds 1024 byte limit                 |
+| `ErrIdentifierInvalidChars`    | Identifier contains invalid characters             |
+| `ErrNotEnoughPositionalParams` | Fewer positional parameters provided than required |
+| `ErrTooManyPositionalParams`   | More positional parameters provided than required  |
+| `ErrEmptySQL`                  | Query SQL is empty                                 |
+
+### Error Examples
+
+```go
+// Invalid character error
+q := client.Query("SELECT * FROM $table")
+q.Parameters = []bigquery.QueryParameter{
+    {Name: "$table", Value: "table; DROP TABLE users"},
+}
+_, err := q.Run(ctx)
+// err: "identifier contains invalid characters: $table contains ;"
+
+// Missing parameter error
+q := client.Query("SELECT * FROM $table WHERE status = @status")
+q.Parameters = []bigquery.QueryParameter{
+    {Name: "$table", Value: "my-table"},
+    // Missing @status parameter
+}
+_, err := q.Run(ctx)
+// err: "parameter not provided in parameters: @status"
+
+// Unused parameter error
+q := client.Query("SELECT * FROM $table")
+q.Parameters = []bigquery.QueryParameter{
+    {Name: "$table", Value: "my-table"},
+    {Name: "$unused", Value: "extra"}, // Not used in query
+}
+_, err := q.Run(ctx)
+// err: "identifier not found in query: $unused"
+```
+
 ## Testing
 
 Run tests:
