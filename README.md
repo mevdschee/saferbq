@@ -19,7 +19,7 @@ door to SQL injection.
 `saferbq` introduces `$identifier` syntax that:
 
 1. Automatically wraps identifiers in backticks
-2. Safely sanitizes special characters (convert hyphens to underscores)
+2. Safely sanitizes special characters (convert backticks to underscores)
 3. Works alongside native BigQuery `@parameters` and `?` positional parameters
 4. Validates all parameters are present before execution
 
@@ -170,7 +170,7 @@ job, _ := q.Run(ctx)
 ## How It Works
 
 1. **Identifier Detection**: Finds all `$identifier` parameters in your SQL
-2. **Sanitization**: Converts special characters (hyphens, dots, etc.) to
+2. **Sanitization**: Converts special characters (backticks, etc.) to
    underscores
 3. **Backtick Quoting**: Wraps sanitized identifiers in backticks
 4. **Validation**: Ensures all parameters are provided and present in SQL
@@ -194,7 +194,7 @@ mechanism.
 ## Safety Features
 
 - **No SQL Injection**: Identifiers are sanitized and quoted, not concatenated
-- **Character Sanitization**: Hyphens and special characters → underscores
+- **Character Sanitization**: Backticks and special characters → underscores
 - **Parameter Validation**: Errors if parameters are missing or unused
 - **Drop-in Replacement**: Same API as official BigQuery SDK
 

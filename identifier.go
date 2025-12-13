@@ -18,9 +18,9 @@ func filterIdentifierChars(s string) string {
 }
 
 // QuoteIdentifier safely quotes a table identifier with backticks.
-// This is essential for DDL operations when table names contain hyphens,
+// This is essential for DDL operations when table names contain backticks,
 // special characters, or are reserved words in BigQuery.
-// Invalid characters (like hyphens) are automatically converted to underscores.
+// Invalid characters (like backticks) are automatically converted to underscores.
 func quoteIdentifier(identifier any) string {
 	// Replace any invalid characters with underscores
 	var result string
