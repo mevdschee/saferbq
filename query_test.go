@@ -321,3 +321,47 @@ func equalQueryParameters(a, b []bigquery.QueryParameter) bool {
 	}
 	return true
 }
+
+func BenchmarkTranslateVsConcat(b *testing.B) {
+	b.Run("translate_simple", func(b *testing.B) {
+		sql := "SELECT * FROM $table WHERE id = 1"
+		params := []bigquery.QueryParameter{
+			{Name: "$table", Value: "mydataset.mytable"},
+		}
+		b.ResetTimer()
+		for b.Loop() {
+			_, _, _ = translate(sql, params)
+		}
+	})
+
+	b.Run("concat_simple", func(b *testing.B) {
+		tableName := "mydataset.mytable"
+		b.ResetTimer()
+		for b.Loop() {
+			_ = fmt.Sprintf("SELECT * FROM `%s` WHERE id = 1", tableName)
+		}
+	})
+
+	b.Run("translate_complex", func(b *testing.B) {
+		sql := "SELECT * FROM $table1 JOIN $table2 ON $table1.id = $table2.id WHERE status = @status"
+		params := []bigquery.QueryParameter{
+			{Name: "$table1", Value: "dataset.table1"},
+			{Name: "$table2", Value: "dataset.table2"},
+			{Name: "@status", Value: "active"},
+		}
+		b.ResetTimer()
+		for b.Loop() {
+			_, _, _ = translate(sql, params)
+		}
+	})
+
+	b.Run("concat_complex", func(b *testing.B) {
+		table1 := "dataset.table1"
+		table2 := "dataset.table2"
+		b.ResetTimer()
+		for b.Loop() {
+			_ = fmt.Sprintf("SELECT * FROM `%s` JOIN `%s` ON `%s`.id = `%s`.id WHERE status = @status",
+				table1, table2, table1, table2)
+		}
+	})
+}

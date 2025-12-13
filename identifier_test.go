@@ -66,3 +66,21 @@ func TestQuoteIdentifier(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkQuoteIdentifier(b *testing.B) {
+	testCases := []struct {
+		name  string
+		input any
+	}{
+		{"simple", "mytable"},
+		{"complex", "my-project.my-dataset.my-table"},
+	}
+
+	for _, tc := range testCases {
+		b.Run(tc.name, func(b *testing.B) {
+			for b.Loop() {
+				_ = quoteIdentifier(tc.input)
+			}
+		})
+	}
+}
