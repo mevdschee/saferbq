@@ -178,7 +178,7 @@ q.Parameters = []bigquery.QueryParameter{
 
 ## Parameter Types
 
-| Syntax        | Purpose                  | Example          | Hanlded by |
+| Syntax        | Purpose                  | Example          | Handled by |
 | ------------- | ------------------------ | ---------------- | ---------- |
 | `$identifier` | Table/dataset names      | `FROM $table`    | saferbq    |
 | `@parameter`  | Data values (named)      | `WHERE id = @id` | bigquery   |
