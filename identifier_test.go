@@ -41,6 +41,16 @@ func TestQuoteIdentifier(t *testing.T) {
 			identifierOut: "`my táble`",
 		},
 		{
+			name:          "with unicode letters",
+			identifierIn:  "表格",
+			identifierOut: "`表格`",
+		},
+		{
+			name:          "with sql injection attempt",
+			identifierIn:  "my-table`; DROP TABLE",
+			identifierOut: "`my-table__ DROP TABLE`",
+		},
+		{
 			name:          "with backtick",
 			identifierIn:  "my`table",
 			identifierOut: "`my_table`",
