@@ -24,8 +24,6 @@ var (
 // translate converts dollar-sign parameters to BigQuery's native syntax.
 // @param stays as @param (native BigQuery parameters).
 // $identifier gets replaced with QuoteIdentifier(value) if in identifiers map.
-// $1, $2 get replaced with QuoteIdentifier(value) for positional parameters
-// looked up by their 1-based index in the parameters slice.
 func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery.QueryParameter, error) {
 
 	// Build parameters and identifiers map
