@@ -23,7 +23,7 @@ var (
 
 // translate converts dollar-sign parameters to BigQuery's native syntax.
 // @param stays as @param (native BigQuery parameters).
-// $identifier gets replaced with QuoteIdentifier(value) if in identifiers map.
+// $identifier gets replaced with QuoteIdentifier(value).
 func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery.QueryParameter, error) {
 
 	// Build parameters and identifiers map
