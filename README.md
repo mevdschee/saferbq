@@ -14,7 +14,7 @@ dataset names that:
 - Need to be used in DDL operations (CREATE, ALTER, DROP)
 
 BigQuery's official Go SDK uses `@` for named parameters and `?` for positional
-parameters, but these **cannot be used for table/dataset identifiers** in SQL
+parameters, but these cannot be used for table/dataset identifiers in SQL
 statements. You're forced to use string concatenation, which is:
 
 - **Unsafe**: Opens the door to SQL injection
