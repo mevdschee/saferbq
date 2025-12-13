@@ -202,7 +202,7 @@ characters, following
   punctuation (including `_`), dashes (`-`), and spaces
 - **Sanitized**: All other characters (including backticks, semicolons, quotes,
   etc.) are automatically converted to underscores
-- **Length**: Up to 1,024 characters
+- **Length**: Not empty and up to 1024 characters
 
 Examples of valid identifier values:
 
