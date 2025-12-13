@@ -1,5 +1,6 @@
-// Package saferbq provides a wrapper around the BigQuery Go SDK that enables
-// dollar-sign parameter syntax and safe identifier quoting for DDL operations.
+// saferbq is a package that provides a wrapper around the BigQuery Go SDK. It
+// enables dollar-sign parameter syntax for safe identifier quoting. This is
+// useful for operations where user input is used as table or dataset names.
 //
 // The native BigQuery SDK uses @ for named parameters (e.g., @param) and ? for
 // positional parameters. This package adds $ syntax (e.g., $param) for
