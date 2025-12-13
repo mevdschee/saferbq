@@ -89,6 +89,7 @@ import (
 )
 
 ctx := context.Background()
+// create the client from the saferbq package instead of the bigquery package.
 client, _ := saferbq.NewClient(ctx, projId)
 defer client.Close()
 
