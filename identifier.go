@@ -40,13 +40,6 @@ func quoteIdentifier(identifier any) string {
 	switch v := identifier.(type) {
 	case string:
 		result = filterIdentifierChars(v)
-	//case []string:
-	//	// foreach entry in the slice, filter chars and join with underscore
-	//	parts := make([]string, len(v))
-	//	for i, part := range v {
-	//		parts[i] = filterIdentifierChars(part)
-	//	}
-	//	result = strings.Join(parts, "`, `")
 	default:
 		result = filterIdentifierChars(fmt.Sprintf("%v", identifier))
 	}

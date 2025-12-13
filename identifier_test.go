@@ -65,11 +65,6 @@ func TestQuoteIdentifier(t *testing.T) {
 			identifierIn:  "`mytable`",
 			identifierOut: "`_mytable_`",
 		},
-		//{
-		//	name:          "slice of strings",
-		//	identifierIn:  []string{"my-project", "my-dataset", "my-table"},
-		//	identifierOut: "`my_project`, `my_dataset`, `my_table`",
-		//},
 		{
 			name:          "non-string identifier",
 			identifierIn:  12345,

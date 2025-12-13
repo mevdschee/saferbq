@@ -34,29 +34,11 @@ func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery
 		paramName := p.Name
 		if len(paramName) > 0 {
 			switch paramName[0] {
-			case '@':
-				//// detect slices of type []string
-				//if slice, ok := p.Value.([]string); ok {
-				//	// for each entry in the slice, add a new parameter with _index suffix
-				//	replace := []string{}
-				//	for i, newParamValue := range slice {
-				//		newParamName := fmt.Sprintf("%s_%d", paramName, i+1)
-				//		newParam := bigquery.QueryParameter{
-				//			Name:  newParamName[1:], // remove @ prefix
-				//			Value: newParamValue,
-				//		}
-				//		replace = append(replace, newParamName)
-				//		parameters[newParamName] = newParam
-				//		allParameters = append(allParameters, newParam)
-				//	}
-				//	sql = strings.ReplaceAll(sql, paramName, strings.Join(replace, ", "))
-				//	continue
-				//}
-				// normal @param case
+			case '@': // Named parameter
 				p.Name = paramName[1:]
 				parameters[paramName] = p
 				allParameters = append(allParameters, p)
-			case '$':
+			case '$': // Identifier parameter
 				identifiers[paramName] = p.Value
 			default:
 				return "", nil, fmt.Errorf("invalid parameter name %s: must start with @ or $", paramName)
