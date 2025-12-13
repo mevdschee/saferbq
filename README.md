@@ -181,8 +181,8 @@ q.Parameters = []bigquery.QueryParameter{
 | Syntax        | Purpose                  | Example          | Replacement          |
 | ------------- | ------------------------ | ---------------- | -------------------- |
 | `$identifier` | Table/dataset names      | `FROM $table`    | `` FROM `mytable` `` |
-| `@parameter`  | Data values (named)      | `WHERE id = @id` | n/a                  |
-| `?`           | Data values (positional) | `WHERE id = ?`   | n/a                  |
+| `@parameter`  | Data values (named)      | `WHERE id = @id` |                      |
+| `?`           | Data values (positional) | `WHERE id = ?`   |                      |
 
 Only the `$` parameters are replaced, while the `@` parameters and `?`
 (positional) parameters are handled by the normal BigQuery parameterized query
