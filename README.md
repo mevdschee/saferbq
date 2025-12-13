@@ -65,7 +65,7 @@ tableName := getUserInput() // User provides: "logs` WHERE 1=1; DROP TABLE custo
 q := client.Query("SELECT * FROM $table WHERE user_id = 123")
 q.Parameters = []bigquery.QueryParameter{{Name: "$table", Value: tableName}}
 // Results: SELECT * FROM `logs__WHERE_1_1__DROP_TABLE_customers____` WHERE user_id = 123
-// NB: Fails safely as that table does not exist, customers table unaffected.
+// NB: Fails safely as no such table exists, customers table unaffected.
 ```
 
 ## Installation
