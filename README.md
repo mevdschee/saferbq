@@ -160,8 +160,7 @@ q.Parameters = []bigquery.QueryParameter{
 ## Safety Features
 
 - **No SQL Injection**: Identifiers are sanitized and quoted, not concatenated
-- **Character Sanitization**: Hyphens, dots, and special characters →
-  underscores
+- **Character Sanitization**: Hyphens and special characters → underscores
 - **Parameter Validation**: Errors if parameters are missing or unused
 - **Drop-in Replacement**: Same API as official BigQuery SDK
 
