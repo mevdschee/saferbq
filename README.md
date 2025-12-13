@@ -214,7 +214,8 @@ Examples of valid identifier values:
 {Name: "$table", Value: "table`; DROP TABLE"} // Sanitized to: table__ DROP TABLE
 ```
 
-Examples of invalid characters in identifier values: `./`
+Examples of invalid characters in identifier values:
+``!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~``
 
 **Important**: To dynamically reference a full path like `project.dataset.table`
 or `roles/bigquery.dataViewer`, use 3 separate parameters.
