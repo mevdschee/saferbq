@@ -28,12 +28,12 @@ func TestQuoteIdentifier(t *testing.T) {
 		{
 			name:          "with dot",
 			identifierIn:  "my.dataset.table",
-			identifierOut: "`my.dataset.table`",
+			identifierOut: "`my_dataset_table`",
 		},
 		{
 			name:          "with slashes",
 			identifierIn:  "my/dataset/table",
-			identifierOut: "`my/dataset/table`",
+			identifierOut: "`my_dataset_table`",
 		},
 		{
 			name:          "with special chars",
