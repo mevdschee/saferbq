@@ -214,7 +214,7 @@ Examples of valid identifier values:
 {Name: "$table", Value: "table`; DROP TABLE"} // Sanitized to: table_ DROP TABLE
 ```
 
-**Important**: To reference a full paths like `project.dataset.table` or
+**Important**: To reference a full path like `project.dataset.table` or
 `roles/bigquery.dataViewer`, use separate parameters.
 
 ## Safety Features
