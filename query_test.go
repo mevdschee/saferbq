@@ -169,19 +169,19 @@ func TestQueryTranslate(t *testing.T) {
 			name:         "invalid parameter name",
 			sqlIn:        "SELECT * FROM table WHERE id = 1",
 			parametersIn: []bigquery.QueryParameter{{Name: "corpus", Value: "corpus_value"}},
-			errorMessage: "invalid parameter name corpus: must start with @ or $",
+			errorMessage: "invalid parameter name: corpus must start with @ or $",
 		},
 		{
 			name:         "empty identifier value",
 			sqlIn:        "SELECT * FROM $table WHERE id = 1",
 			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: ""}},
-			errorMessage: "identifier $table is empty",
+			errorMessage: "identifier is empty: $table",
 		},
 		{
 			name:         "identifier value too long",
 			sqlIn:        "SELECT * FROM $table WHERE id = 1",
 			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: strings.Repeat("a", 1025)}},
-			errorMessage: "identifier $table is too long",
+			errorMessage: "identifier is too long: $table",
 		},
 		// Error cases - positional parameter validation
 		{
@@ -213,50 +213,50 @@ func TestQueryTranslate(t *testing.T) {
 			name:         "missing named parameter",
 			sqlIn:        "SELECT * FROM $table WHERE status = @status",
 			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: "mytable"}},
-			errorMessage: "parameter @status not provided in parameters",
+			errorMessage: "parameter not provided in parameters: @status",
 		},
 		{
 			name:         "missing identifier",
 			sqlIn:        "SELECT * FROM $table WHERE id = 1",
 			parametersIn: []bigquery.QueryParameter{},
-			errorMessage: "identifier $table not provided in parameters",
+			errorMessage: "identifier not provided in parameters: $table",
 		},
 		{
 			name:         "unused named parameter",
 			sqlIn:        "SELECT * FROM $table WHERE id = 1",
 			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: "mytable"}, {Name: "@unused", Value: "value"}},
-			errorMessage: "parameter @unused not found in query",
+			errorMessage: "parameter not found in query: @unused",
 		},
 		{
 			name:         "unused identifier",
 			sqlIn:        "SELECT * FROM $table WHERE id = 1",
 			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: "mytable"}, {Name: "$unused", Value: "value"}},
-			errorMessage: "identifier $unused not found in query",
+			errorMessage: "identifier not found in query: $unused",
 		},
 		// SQL injection attempt cases
 		{
 			name:         "injection attempt - DROP TABLE via backtick escape",
 			sqlIn:        "SELECT * FROM $table WHERE user_id = @user_id",
 			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: "logs` WHERE 1=1; DROP TABLE customers; --"}, {Name: "@user_id", Value: 123}},
-			errorMessage: "identifier $table contains invalid characters: `=;",
+			errorMessage: "identifier contains invalid characters: $table contains `=;",
 		},
 		{
 			name:         "injection attempt - UNION attack",
 			sqlIn:        "SELECT * FROM $table WHERE id = @id",
 			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: "users` UNION SELECT * FROM passwords WHERE `1`=`1"}, {Name: "@id", Value: 1}},
-			errorMessage: "identifier $table contains invalid characters: `*=",
+			errorMessage: "identifier contains invalid characters: $table contains `*=",
 		},
 		{
 			name:         "injection attempt - semicolon statement separator",
 			sqlIn:        "DELETE FROM $table WHERE id = @id",
 			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: "temp_table`; DELETE FROM important_data; --"}, {Name: "@id", Value: 999}},
-			errorMessage: "identifier $table contains invalid characters: `;",
+			errorMessage: "identifier contains invalid characters: $table contains `;",
 		},
 		{
 			name:         "injection attempt - comment injection",
 			sqlIn:        "UPDATE $table SET status = @status WHERE id = @id",
 			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: "users` -- malicious comment"}, {Name: "@status", Value: "active"}, {Name: "@id", Value: 1}},
-			errorMessage: "identifier $table contains invalid characters: `",
+			errorMessage: "identifier contains invalid characters: $table contains `",
 		},
 	}
 
