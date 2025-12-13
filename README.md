@@ -34,7 +34,7 @@ q.Parameters = []bigquery.QueryParameter{{Name: "$table", Value: userInput}}
 q.Run(ctx)
 ```
 
-### SQL Injection Attack
+### Example of SQL Injection
 
 String concatenation in SQL is unsafe, as it is vulnerable to SQL injection:
 
