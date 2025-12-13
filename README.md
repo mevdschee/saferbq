@@ -19,9 +19,9 @@ door to SQL injection.
 `saferbq` introduces `$identifier` syntax that:
 
 1. Automatically wraps identifiers in backticks
-2. Safely sanitizes special characters (convert backticks to underscores)
+2. Validates identifiers and fails when invalid characters are present
 3. Works alongside native BigQuery `@parameters` and `?` positional parameters
-4. Validates all parameters are present before execution
+4. Validates that all parameters are present before execution
 
 ```go
 // Instead of unsafe string concatenation with user input:
@@ -64,8 +64,7 @@ client := saferbq.NewClient(ctx, projId)
 tableName := getUserInput() // User provides: "logs` WHERE 1=1; DROP TABLE customers; --"
 q := client.Query("SELECT * FROM $table WHERE user_id = 123")
 q.Parameters = []bigquery.QueryParameter{{Name: "$table", Value: tableName}}
-// Results: SELECT * FROM `logs_ WHERE 1_1_ DROP TABLE customers_ --` WHERE user_id = 123
-// NB: Fails safely as no such table exists, customers table unaffected.
+// Error: identifier $table contains invalid characters: `=;
 ```
 
 NB: You have to create the client from the `saferbq` package instead of the
@@ -159,14 +158,35 @@ job, _ := q.Run(ctx)
 
 ## How It Works
 
-- **Identifier Detection**: Finds all `$identifier` parameters in your SQL
-- **Sanitization**: Converts special characters (backticks, etc.) to underscores
-- **Backtick Quoting**: Wraps sanitized identifiers in backticks
-- **Validation**: Ensures all parameters are provided and present in SQL
-- **Replacement**: Substitutes `$identifier` with `` `safe_identifier` `` before
-  execution
-- **Pass-through**: Native `@parameters` and `?` are handled by BigQuery SDK as
-  usual
+When you execute a query, saferbq intercepts the SQL and parameters before they
+reach BigQuery. First, it scans through the SQL string to identify all
+dollar-sign parameters (like `$table` or `$dataset`) and extracts their names.
+Simultaneously, it identifies any native BigQuery parameters that start with `@`
+and positional parameters marked with `?`.
+
+Next, it validates that every parameter found in the SQL has a corresponding
+value provided in the parameters list, and vice versa - ensuring no parameters
+are missing or unused. For identifier parameters (those starting with `$`), it
+checks that the values are not empty and validates each character.
+
+Each identifier value is validated by iterating through its characters. Valid
+characters include Unicode letters, marks, numbers, underscores, dashes, and
+spaces. If any invalid character is found (such as backticks, semicolons,
+quotes, or slashes), the query immediately fails with a detailed error message
+listing the problematic characters. This prevents any attempt at SQL injection
+from being executed. The query also fails when the BigQuery's 1024-byte limit on
+identifiers is exceeded.
+
+After validation succeeds, each identifier is wrapped in backticks and
+substituted into the SQL in place of its `$parameter` placeholder. Native
+BigQuery parameters (`@param` and `?`) are left untouched in the SQL string but
+have their names normalized (removing the `@` prefix) so BigQuery can process
+them correctly.
+
+Finally, the transformed SQL and updated parameter list are passed to BigQuery's
+standard query execution, where the native parameters are securely bound by the
+BigQuery SDK itself. This approach ensures identifiers are safely quoted while
+preserving the security benefits of parameterized queries for data values.
 
 ## Parameter Types
 
@@ -194,37 +214,44 @@ Valid: `$table`, `$my_table`, `$table1`, `$__private`
 
 ### Identifier Values (BigQuery tables/datasets)
 
-The actual identifier values you provide can contain a much wider range of
-characters, following
+The actual identifier values you provide must follow
 [BigQuery's identifier rules](https://cloud.google.com/bigquery/docs/tables#table_naming):
 
 - **Allowed**: Letters (any Unicode letter), marks, numbers, connector
   punctuation (including `_`), dashes (`-`), and spaces
-- **Sanitized**: All other characters (including backticks, semicolons, quotes,
-  etc.) are automatically converted to underscores
-- **Length**: Not empty and up to 1024 characters
+- **Disallowed**: All other characters (including backticks, semicolons, quotes,
+  slashes, etc.) will cause the query to fail with an error
+- **Length**: Not empty and up to 1024 bytes
 
 Examples of valid identifier values:
 
 ```go
-{Name: "$table", Value: "my-table"}           // Dashes allowed
-{Name: "$table", Value: "my table"}           // Spaces allowed
-{Name: "$table", Value: "table_123"}          // Underscores and numbers allowed
-{Name: "$table", Value: "表格"}                // Unicode letters allowed
-{Name: "$table", Value: "table`; DROP TABLE"} // Sanitized to: table__ DROP TABLE
+{Name: "$table", Value: "my-table"}    // ✅ Dashes allowed
+{Name: "$table", Value: "my table"}    // ✅ Spaces allowed
+{Name: "$table", Value: "table_123"}   // ✅ Underscores and numbers allowed
+{Name: "$table", Value: "表格"}         // ✅ Unicode letters allowed
 ```
 
-Examples of invalid characters in identifier values:
-``!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~``
+Examples that will cause errors:
+
+```go
+{Name: "$table", Value: "table`; DROP TABLE"} // ❌ Error: invalid characters: `;`
+{Name: "$table", Value: "my.table"}           // ❌ Error: invalid characters: `.`
+{Name: "$table", Value: "table/name"}         // ❌ Error: invalid characters: `/`
+```
+
+Invalid characters include: ``!"#$%&'()*+,./:;<=>?@[\]^`{|}~`` and others
 
 **Important**: To dynamically reference a full path like `project.dataset.table`
 or `roles/bigquery.dataViewer`, use 3 separate parameters.
 
 ## Safety Features
 
-- **No SQL Injection**: Identifiers are sanitized and quoted, not concatenated
-- **Character Sanitization**: Backticks and special characters → underscores
-- **Parameter Validation**: Errors if parameters are missing or unused
+- **No SQL Injection**: Identifiers are validated and quoted, never concatenated
+- **Strict Character Validation**: Invalid characters cause immediate query
+  failure
+- **Comprehensive Parameter Validation**: Errors on missing, unused, empty,
+  invalid, or too long parameters
 - **Drop-in Replacement**: Same API as official BigQuery SDK
 
 ## Testing
