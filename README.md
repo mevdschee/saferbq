@@ -3,7 +3,7 @@
 A Go wrapper for the BigQuery SDK that prevents SQL injection in DDL by enabling
 dollar-sign `$` syntax for table and dataset names that need backtick quoting.
 
-## The problem
+## The Problem
 
 When building dynamic BigQuery queries, you often need to reference table or
 dataset names that are dynamically determined at runtime and are escaped by
@@ -14,7 +14,7 @@ parameters, but these cannot be used for identifiers in SQL statements that are
 escaped by backticks. You're forced to use string concatenation, which opens the
 door to SQL injection.
 
-## The solution
+## The Solution
 
 `saferbq` introduces `$identifier` syntax that:
 
@@ -34,7 +34,7 @@ q.Parameters = []bigquery.QueryParameter{{Name: "$table", Value: userInput}}
 q.Run(ctx)
 ```
 
-### Example of SQL injection
+### Example of SQL Injection
 
 String concatenation in SQL is unsafe, as it is vulnerable to SQL injection:
 
@@ -79,7 +79,7 @@ go get github.com/mevdschee/saferbq
 
 ## Usage
 
-### Create a supporting client
+### Create a Supporting Client
 
 Create the client from the `saferbq` package instead of the `bigquery` package.
 
@@ -95,7 +95,7 @@ client, _ := saferbq.NewClient(ctx, projId) // replaces: bigquery.NewClient(...)
 defer client.Close()
 ```
 
-### Basic query with table identifier
+### Basic Query with Table Identifier
 
 The `$table` parameter will be replaced with `myproject.mydataset.mytable`
 
@@ -109,7 +109,7 @@ job, _ := q.Run(ctx)
 // Results: SELECT * FROM `myproject.mydataset.mytable` WHERE id = 1
 ```
 
-### Mixing $ identifiers with @ parameters
+### Mixing $ Identifiers with @ Parameters
 
 The `$table` parameter becomes a quoted identifier, while the `@corpus`
 parameter stays as a BigQuery parameter (which is safe for data values).
@@ -125,7 +125,7 @@ job, _ := q.Run(ctx)
 // Results: SELECT * FROM `mytable` WHERE corpus = @corpus
 ```
 
-### Combining with positional parameters
+### Combining with Positional Parameters
 
 You can mix the named parameters with positional parameters.
 
@@ -143,7 +143,7 @@ job, _ := q.Run(ctx)
 // Results: SELECT * FROM `myproject`.`mydataset`.`mytable` WHERE id = ? AND status = ?
 ```
 
-## How it works
+## How It Works
 
 1. **Identifier Detection**: Finds all `$identifier` parameters in your SQL
 2. **Sanitization**: Converts special characters (backticks, etc.) to
@@ -155,7 +155,7 @@ job, _ := q.Run(ctx)
 6. **Pass-through**: Native `@parameters` and `?` are handled by BigQuery SDK as
    usual
 
-## Parameter types
+## Parameter Types
 
 | Syntax        | Purpose                  | Example          | Handled by |
 | ------------- | ------------------------ | ---------------- | ---------- |
@@ -167,7 +167,7 @@ Only the `$` parameters are replaced, while the `@` parameters and `?`
 (positional) parameters are handled by the normal BigQuery parameterized query
 mechanism.
 
-## Safety features
+## Safety Features
 
 - **No SQL Injection**: Identifiers are sanitized and quoted, not concatenated
 - **Character Sanitization**: Backticks and special characters → underscores
