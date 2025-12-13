@@ -95,6 +95,7 @@ q := client.Query(sql)
 q.Parameters = []bigquery.QueryParameter{
     {Name: "$table", Value: "myproject.mydataset.mytable"},
 }
+job, _ := q.Run(ctx)
 
 // Results: SELECT * FROM `myproject.mydataset.mytable` WHERE id = 1
 ```
@@ -110,6 +111,7 @@ q.Parameters = []bigquery.QueryParameter{
     {Name: "$table", Value: "mytable"},
     {Name: "@corpus", Value: "en-US"},
 }
+job, _ := q.Run(ctx)
 
 // Results: SELECT * FROM `mytable` WHERE corpus = @corpus
 ```
@@ -129,6 +131,7 @@ q := client.Query(sql)
 q.Parameters = []bigquery.QueryParameter{
     {Name: "$table", Value: "mydataset.mynew-table"},
 }
+job, _ := q.Run(ctx)
 
 // Results: CREATE TABLE IF NOT EXISTS `mydataset_mynew_table` (...)
 ```
@@ -142,6 +145,7 @@ q.Parameters = []bigquery.QueryParameter{
     {Name: "$table1", Value: "dataset.table1"},
     {Name: "$table2", Value: "dataset.table2"},
 }
+job, _ := q.Run(ctx)
 
 // Results: SELECT * FROM `dataset_table1` JOIN `dataset_table2` ON `dataset_table1`.id = `dataset_table2`.id
 ```
@@ -158,6 +162,7 @@ q.Parameters = []bigquery.QueryParameter{
     {Value: 1},      // First ?
     {Value: "active"}, // Second ?
 }
+job, _ := q.Run(ctx)
 
 // Results: SELECT * FROM `myproject`.`mydataset`.`mytable` WHERE id = ? AND status = ?
 ```
