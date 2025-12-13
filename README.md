@@ -215,7 +215,7 @@ Examples of valid identifier values:
 ```
 
 **Important**: To reference a full path like `project.dataset.table` or
-`roles/bigquery.dataViewer`, use separate parameters.
+`roles/bigquery.dataViewer`, use 3 separate parameters.
 
 ## Safety Features
 
