@@ -180,7 +180,7 @@ func TestQueryTranslate(t *testing.T) {
 			sqlOut:        "SELECT id, CASE WHEN status = @status1 THEN 'active' WHEN status = @status2 THEN 'inactive' END as status_label FROM `mydataset`.`mytable`",
 			parametersOut: []bigquery.QueryParameter{{Name: "status1", Value: 1}, {Name: "status2", Value: 0}},
 		},
-		// Error cases - invalid parameter names
+		// Error cases - invalid parameter names or values
 		{
 			name:         "invalid parameter name",
 			sqlIn:        "SELECT * FROM table WHERE id = 1",
