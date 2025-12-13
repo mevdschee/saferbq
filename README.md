@@ -1,0 +1,198 @@
+# saferbq
+
+A Go wrapper for the BigQuery SDK that solves the identifier injection problem
+by enabling dollar-sign (`$`) syntax for table and dataset names that need
+backtick quoting.
+
+## The Problem
+
+When building dynamic BigQuery queries, you often need to reference table or
+dataset names that:
+
+- Contain hyphens (e.g., `my-dataset.my-table`)
+- Are dynamically determined at runtime
+- Need to be used in DDL operations (CREATE, ALTER, DROP)
+
+BigQuery's official Go SDK uses `@` for named parameters and `?` for positional
+parameters, but these **cannot be used for table/dataset identifiers** in SQL
+statements. You're forced to use string concatenation, which is:
+
+- **Unsafe**: Opens the door to SQL injection
+- **Error-prone**: Manual backtick quoting is tedious
+- **Fragile**: Special characters break queries
+
+## The Solution
+
+`saferbq` introduces `$identifier` syntax that:
+
+1. Automatically wraps identifiers in backticks
+2. Safely sanitizes special characters (hyphens, dots → underscores)
+3. Works alongside native BigQuery `@parameters` and `?` positional parameters
+4. Validates all parameters are present before execution
+
+```go
+// Instead of unsafe string concatenation:
+sql := fmt.Sprintf("SELECT * FROM `%s` WHERE id = 1", unsafeTableName)
+
+// Use safe $ parameters:
+sql := "SELECT * FROM $tablename WHERE id = 1"
+q.Parameters = []bigquery.QueryParameter{
+    {Name: "$tablename", Value: "my-project.my-dataset.my-table"},
+}
+```
+
+## Installation
+
+```bash
+go get github.com/maurits/saferbq
+```
+
+## Usage
+
+### Basic Query with Table Identifier
+
+```go
+import (
+    "context"
+    "cloud.google.com/go/bigquery"
+    "github.com/maurits/saferbq"
+)
+
+ctx := context.Background()
+client, _ := saferbq.NewClient(ctx, "my-project")
+defer client.Close()
+
+// $tablename will be replaced with `my_project_my_dataset_my_table`
+sql := "SELECT * FROM $tablename WHERE id = 1"
+q := client.Query(sql)
+q.Parameters = []bigquery.QueryParameter{
+    {Name: "$tablename", Value: "my-project.my-dataset.my-table"},
+}
+
+it, _ := q.Read(ctx)
+// Results: SELECT * FROM `my_project_my_dataset_my_table` WHERE id = 1
+```
+
+### Mixing $ Identifiers with @ Parameters
+
+```go
+// $tablename becomes a quoted identifier
+// @corpus stays as a BigQuery parameter (safe for data values)
+sql := "SELECT * FROM $tablename WHERE corpus = @corpus"
+q := client.Query(sql)
+q.Parameters = []bigquery.QueryParameter{
+    {Name: "$tablename", Value: "my-table"},
+    {Name: "@corpus", Value: "en-US"},
+}
+
+// Results: SELECT * FROM `my_table` WHERE corpus = @corpus
+```
+
+### DDL Operations
+
+Perfect for CREATE/ALTER/DROP statements where identifiers can't be
+parameterized:
+
+```go
+sql := `CREATE TABLE IF NOT EXISTS $tablename (
+    id INT64,
+    name STRING,
+    created_at TIMESTAMP
+)`
+q := client.Query(sql)
+q.Parameters = []bigquery.QueryParameter{
+    {Name: "$tablename", Value: "my-dataset.my-new-table"},
+}
+
+job, _ := q.Run(ctx)
+// Results: CREATE TABLE IF NOT EXISTS `my_dataset_my_new_table` (...)
+```
+
+### Multiple Table Identifiers
+
+```go
+sql := "SELECT * FROM $table1 JOIN $table2 ON $table1.id = $table2.id"
+q := client.Query(sql)
+q.Parameters = []bigquery.QueryParameter{
+    {Name: "$table1", Value: "dataset.table1"},
+    {Name: "$table2", Value: "dataset.table2"},
+}
+
+// Results: SELECT * FROM `dataset_table1` JOIN `dataset_table2` ON `dataset_table1`.id = `dataset_table2`.id
+```
+
+### Combining with Positional Parameters
+
+```go
+sql := "SELECT * FROM $project.$dataset.$table WHERE id = ? AND status = ?"
+q := client.Query(sql)
+q.Parameters = []bigquery.QueryParameter{
+    {Name: "$project", Value: "my-project"},
+    {Name: "$dataset", Value: "my-dataset"},
+    {Name: "$table", Value: "my-table"},
+    {Value: 1},      // First ?
+    {Value: "active"}, // Second ?
+}
+
+// Results: SELECT * FROM `my_project`.`my_dataset`.`my_table` WHERE id = ? AND status = ?
+```
+
+## How It Works
+
+1. **Identifier Detection**: Finds all `$identifier` parameters in your SQL
+2. **Sanitization**: Converts special characters (hyphens, dots, etc.) to
+   underscores
+3. **Backtick Quoting**: Wraps sanitized identifiers in backticks
+4. **Validation**: Ensures all parameters are provided and present in SQL
+5. **Replacement**: Substitutes `$identifier` with `` `safe_identifier` ``
+   before execution
+6. **Pass-through**: Native `@parameters` and `?` are handled by BigQuery SDK as
+   usual
+
+## Parameter Types
+
+| Syntax        | Purpose                  | Example        | Result                        |
+| ------------- | ------------------------ | -------------- | ----------------------------- |
+| `$identifier` | Table/dataset names      | `$tablename`   | `` `my_table` ``              |
+| `@parameter`  | Data values (named)      | `@user_id`     | `@user_id` (BigQuery handles) |
+| `?`           | Data values (positional) | `WHERE id = ?` | `?` (BigQuery handles)        |
+
+## Safety Features
+
+- **No SQL Injection**: Identifiers are sanitized and quoted, not concatenated
+- **Character Sanitization**: Hyphens, dots, and special characters →
+  underscores
+- **Parameter Validation**: Errors if parameters are missing or unused
+- **Drop-in Replacement**: Same API as official BigQuery SDK
+
+## Testing
+
+Run tests:
+
+```bash
+go test -v ./...
+```
+
+Run benchmarks:
+
+```bash
+go test -bench=. ./...
+```
+
+## Examples
+
+See [example/main.go](example/main.go) for complete working examples.
+
+## License
+
+MIT
+
+## Contributing
+
+Contributions welcome! Please open an issue or PR.
+
+## Related
+
+- [BigQuery Go SDK](https://pkg.go.dev/cloud.google.com/go/bigquery)
+- [BigQuery Standard SQL Reference](https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax)
+- [BigQuery Identifiers](https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#identifiers)
