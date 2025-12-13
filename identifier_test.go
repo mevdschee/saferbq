@@ -23,12 +23,32 @@ func TestQuoteIdentifier(t *testing.T) {
 		{
 			name:          "with hyphen",
 			identifierIn:  "my-table",
-			identifierOut: "`my_table`",
+			identifierOut: "`my-table`",
 		},
 		{
 			name:          "with dot",
 			identifierIn:  "my.dataset.table",
 			identifierOut: "`my_dataset_table`",
+		},
+		{
+			name:          "with space",
+			identifierIn:  "my table",
+			identifierOut: "`my table`",
+		},
+		{
+			name:          "with diacritics",
+			identifierIn:  "my táble",
+			identifierOut: "`my táble`",
+		},
+		{
+			name:          "with backtick",
+			identifierIn:  "my`table",
+			identifierOut: "`my_table`",
+		},
+		{
+			name:          "with number",
+			identifierIn:  "mytable123",
+			identifierOut: "`mytable123`",
 		},
 		{
 			name:          "with slashes",

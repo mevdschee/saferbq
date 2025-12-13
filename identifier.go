@@ -3,18 +3,31 @@ package saferbq
 import (
 	"fmt"
 	"strings"
+	"unicode"
 )
 
-// characters that are allowed in unquoted identifiers
-const identifierChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
-
+// filterIdentifierChars filters out Unicode characters that do not fall in category
+// - L (letter)
+// - M (mark)
+// - N (number),
+// - Pc (connector, including underscore)
+// - Pd (dash)
+// - Zs (space).
+// from: https://docs.cloud.google.com/bigquery/docs/tables#table_naming
 func filterIdentifierChars(s string) string {
-	return strings.Map(func(r rune) rune {
-		if strings.ContainsRune(identifierChars, r) {
-			return r
+	//implement according to the description
+	var builder strings.Builder
+	for _, r := range s {
+		if unicode.IsLetter(r) ||
+			unicode.IsMark(r) ||
+			unicode.IsNumber(r) ||
+			unicode.In(r, unicode.Pc, unicode.Pd, unicode.Zs) {
+			builder.WriteRune(r)
+		} else {
+			builder.WriteRune('_')
 		}
-		return '_'
-	}, s)
+	}
+	return builder.String()
 }
 
 // QuoteIdentifier safely quotes a table identifier with backticks.
