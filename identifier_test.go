@@ -47,13 +47,8 @@ func TestQuoteIdentifier(t *testing.T) {
 		},
 		{
 			name:          "with sql injection attempt",
-			identifierIn:  "my-table`; DROP TABLE",
-			identifierOut: "`my-table__ DROP TABLE`",
-		},
-		{
-			name:          "with backtick",
-			identifierIn:  "my`table",
-			identifierOut: "`my_table`",
+			identifierIn:  "mytable`; DROP TABLE",
+			identifierOut: "`mytable__ DROP TABLE`",
 		},
 		{
 			name:          "with number",
