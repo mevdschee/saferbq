@@ -99,6 +99,12 @@ func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery
 	result := sql
 	for identifier, value := range identifiers {
 		quoted := quoteIdentifier(value)
+		if len(quoted) == 2 {
+			return "", nil, fmt.Errorf("identifier %s is empty", identifier)
+		}
+		if len(quoted) > 1026 {
+			return "", nil, fmt.Errorf("identifier %s is too long", identifier)
+		}
 		result = strings.ReplaceAll(result, identifier, quoted)
 	}
 	return result, allParameters, nil

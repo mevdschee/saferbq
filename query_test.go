@@ -2,6 +2,7 @@ package saferbq
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"cloud.google.com/go/bigquery"
@@ -185,6 +186,18 @@ func TestQueryTranslate(t *testing.T) {
 			sqlIn:        "SELECT * FROM table WHERE id = 1",
 			parametersIn: []bigquery.QueryParameter{{Name: "corpus", Value: "corpus_value"}},
 			errorMessage: "invalid parameter name corpus: must start with @ or $",
+		},
+		{
+			name:         "empty identifier value",
+			sqlIn:        "SELECT * FROM $table WHERE id = 1",
+			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: ""}},
+			errorMessage: "identifier $table is empty",
+		},
+		{
+			name:         "identifier value too long",
+			sqlIn:        "SELECT * FROM $table WHERE id = 1",
+			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: strings.Repeat("a", 1025)}},
+			errorMessage: "identifier $table is too long",
 		},
 		// Error cases - positional parameter validation
 		{
