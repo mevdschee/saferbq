@@ -96,7 +96,6 @@ q.Parameters = []bigquery.QueryParameter{
     {Name: "$table", Value: "myproject.mydataset.mytable"},
 }
 
-it, _ := q.Read(ctx)
 // Results: SELECT * FROM `myproject.mydataset.mytable` WHERE id = 1
 ```
 
@@ -131,7 +130,6 @@ q.Parameters = []bigquery.QueryParameter{
     {Name: "$table", Value: "mydataset.mynew-table"},
 }
 
-job, _ := q.Run(ctx)
 // Results: CREATE TABLE IF NOT EXISTS `mydataset_mynew_table` (...)
 ```
 
