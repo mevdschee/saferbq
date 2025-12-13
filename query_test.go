@@ -250,7 +250,7 @@ func TestQueryTranslate(t *testing.T) {
 			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: "mytable"}, {Name: "$unused", Value: "value"}},
 			errorMessage: "identifier $unused not found in query",
 		},
-		// SQL injection attempt cases - verify sanitization
+		// SQL injection attempt cases
 		{
 			name:          "injection attempt - DROP TABLE via backtick escape",
 			sqlIn:         "SELECT * FROM $table WHERE user_id = @user_id",
