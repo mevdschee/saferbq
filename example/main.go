@@ -42,13 +42,13 @@ func main() {
 }
 
 func queryWithIdentifiers(ctx context.Context, client *saferbq.Client) {
-	// $tablename gets replaced with quoted identifier: `my_project_my_dataset_my_table`
+	// $table gets replaced with quoted identifier: `my_project_my_dataset_my_table`
 	// Hyphens and dots are automatically converted to underscores
-	sql := "SELECT * FROM $tablename WHERE id = 1"
+	sql := "SELECT * FROM $table WHERE id = 1"
 	q := client.Query(sql)
 	q.Parameters = []bigquery.QueryParameter{
 		{
-			Name:  "$tablename",
+			Name:  "$table",
 			Value: "my-project.my-dataset.my-table",
 		},
 	}
@@ -75,12 +75,12 @@ func queryWithIdentifiers(ctx context.Context, client *saferbq.Client) {
 }
 
 func mixedParameters(ctx context.Context, client *saferbq.Client) {
-	// $tablename is replaced with identifier, @corpus stays as native BigQuery parameter
-	sql := "SELECT * FROM $tablename WHERE corpus = @corpus"
+	// $table is replaced with identifier, @corpus stays as native BigQuery parameter
+	sql := "SELECT * FROM $table WHERE corpus = @corpus"
 	q := client.Query(sql)
 	q.Parameters = []bigquery.QueryParameter{
 		{
-			Name:  "$tablename",
+			Name:  "$table",
 			Value: "my-table",
 		},
 		{
@@ -111,20 +111,28 @@ func mixedParameters(ctx context.Context, client *saferbq.Client) {
 }
 
 func queryPositionalParams(ctx context.Context, client *saferbq.Client) {
-	// $tablename with identifier, ? for positional parameters
-	sql := "SELECT * FROM $tablename WHERE id = ?"
+	// $table with identifier, ? for positional parameters
+	sql := "SELECT * FROM $project.$dataset.$table WHERE id = ?"
 	q := client.Query(sql)
 	q.Parameters = []bigquery.QueryParameter{
 		{
-			Name:  "$tablename",
-			Value: "my-project.my-dataset.my-table",
+			Name:  "$project",
+			Value: "my-project",
+		},
+		{
+			Name:  "$dataset",
+			Value: "my-dataset",
+		},
+		{
+			Name:  "$table",
+			Value: "my-table",
 		},
 		{
 			Value: 1, // Positional parameter
 		},
 	}
 
-	// Resulting SQL: SELECT * FROM `my_project_my_dataset_my_table` WHERE id = ?
+	// Resulting SQL: SELECT * FROM `my_project`.`my_dataset`.`my_table` WHERE id = ?
 	it, err := q.Read(ctx)
 	if err != nil {
 		log.Printf("Query error: %v", err)
@@ -148,7 +156,7 @@ func queryPositionalParams(ctx context.Context, client *saferbq.Client) {
 func ddlOperations(ctx context.Context, client *saferbq.Client) {
 	// DDL operations use $-syntax for table identifiers that need to be quoted
 	// This is perfect for tables with hyphens or reserved words
-	sql := `CREATE TABLE IF NOT EXISTS $tablename (
+	sql := `CREATE TABLE IF NOT EXISTS $dataset.$table (
 		id INT64,
 		name STRING,
 		created_at TIMESTAMP
@@ -156,12 +164,16 @@ func ddlOperations(ctx context.Context, client *saferbq.Client) {
 	q := client.Query(sql)
 	q.Parameters = []bigquery.QueryParameter{
 		{
-			Name:  "$tablename",
-			Value: "my-dataset.my-new-table",
+			Name:  "$dataset",
+			Value: "my-dataset",
+		},
+		{
+			Name:  "$table",
+			Value: "my-new-table",
 		},
 	}
 
-	// Resulting SQL: CREATE TABLE IF NOT EXISTS `my_dataset_my_new_table` (...)
+	// Resulting SQL: CREATE TABLE IF NOT EXISTS `my_dataset`.`my_new_table` (...)
 	job, err := q.Run(ctx)
 	if err != nil {
 		log.Printf("DDL error: %v", err)
