@@ -192,20 +192,20 @@ func ddlOperations(ctx context.Context, client *saferbq.Client) {
 
 func multipleIdentifiers(ctx context.Context, client *saferbq.Client) {
 	// Multiple table identifiers in a JOIN query
-	sql := "SELECT * FROM $table1 JOIN $table2 ON $table1.id = $table2.id"
+	sql := "SELECT * FROM dataset.$table1 JOIN dataset.$table2 ON dataset.$table1.id = dataset.$table2.id"
 	q := client.Query(sql)
 	q.Parameters = []bigquery.QueryParameter{
 		{
 			Name:  "$table1",
-			Value: "dataset.table1",
+			Value: "table1",
 		},
 		{
 			Name:  "$table2",
-			Value: "dataset.table2",
+			Value: "table2",
 		},
 	}
 
-	// Resulting SQL: SELECT * FROM `dataset.table1` JOIN `dataset.table2` ON `dataset.table1`.id = `dataset.table2`.id
+	// Resulting SQL: SELECT * FROM dataset.`table1` JOIN dataset.`table2` ON dataset.`table1`.id = dataset.`table2`.id
 	it, err := q.Read(ctx)
 	if err != nil {
 		log.Printf("Query error: %v", err)
