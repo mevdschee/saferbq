@@ -16,14 +16,15 @@ type Query struct {
 }
 
 var (
-	// namedIdentifierParamRegex matches named parameters like $param or $param_name
+	// Regex to find $identifier parameters
 	identifierParamRegex = regexp.MustCompile(`\$[a-zA-Z_][a-zA-Z0-9_]*`)
-	namedParamRegex      = regexp.MustCompile(`@[a-zA-Z_][a-zA-Z0-9_]*`)
+	// Regex to find @named parameters
+	namedParamRegex = regexp.MustCompile(`@[a-zA-Z_][a-zA-Z0-9_]*`)
 )
 
 // translate converts dollar-sign parameters to BigQuery's native syntax.
 // @param stays as @param (native BigQuery parameters).
-// $identifier gets replaced with QuoteIdentifier(value).
+// $identifier gets replaced with quoteIdentifier(value).
 func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery.QueryParameter, error) {
 	// Build parameters and identifiers map
 	parameters := map[string]bigquery.QueryParameter{}
