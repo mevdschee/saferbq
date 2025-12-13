@@ -98,23 +98,23 @@ func TestQueryTranslate(t *testing.T) {
 		},
 		{
 			name:          "array params from doc - usa names",
-			sqlIn:         "SELECT name, sum(number) as count FROM $table WHERE gender = @gender AND state IN UNNEST(@states) GROUP BY name ORDER BY count DESC LIMIT 10",
-			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "bigquery-public-data.usa_names.usa_1910_2013"}, {Name: "@gender", Value: "M"}, {Name: "@states", Value: []string{"WA", "WI", "WV", "WY"}}},
-			sqlOut:        "SELECT name, sum(number) as count FROM `bigquery_public_data.usa_names.usa_1910_2013` WHERE gender = @gender AND state IN UNNEST(@states) GROUP BY name ORDER BY count DESC LIMIT 10",
+			sqlIn:         "SELECT name, sum(number) as count FROM $project.$dataset.$table WHERE gender = @gender AND state IN UNNEST(@states) GROUP BY name ORDER BY count DESC LIMIT 10",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$project", Value: "bigquery-public-data"}, {Name: "$dataset", Value: "usa_names"}, {Name: "$table", Value: "usa_1910_2013"}, {Name: "@gender", Value: "M"}, {Name: "@states", Value: []string{"WA", "WI", "WV", "WY"}}},
+			sqlOut:        "SELECT name, sum(number) as count FROM `bigquery_public_data`.`usa_names`.`usa_1910_2013` WHERE gender = @gender AND state IN UNNEST(@states) GROUP BY name ORDER BY count DESC LIMIT 10",
 			parametersOut: []bigquery.QueryParameter{{Name: "gender", Value: "M"}, {Name: "states", Value: []string{"WA", "WI", "WV", "WY"}}},
 		},
 		{
 			name:          "basic query from doc - texas names",
-			sqlIn:         "SELECT name FROM $table WHERE state = @state LIMIT 100",
-			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "bigquery-public-data.usa_names.usa_1910_2013"}, {Name: "@state", Value: "TX"}},
-			sqlOut:        "SELECT name FROM `bigquery_public_data.usa_names.usa_1910_2013` WHERE state = @state LIMIT 100",
+			sqlIn:         "SELECT name FROM $project.$dataset.$table WHERE state = @state LIMIT 100",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$project", Value: "bigquery-public-data"}, {Name: "$dataset", Value: "usa_names"}, {Name: "$table", Value: "usa_1910_2013"}, {Name: "@state", Value: "TX"}},
+			sqlOut:        "SELECT name FROM `bigquery_public_data`.`usa_names`.`usa_1910_2013` WHERE state = @state LIMIT 100",
 			parametersOut: []bigquery.QueryParameter{{Name: "state", Value: "TX"}},
 		},
 		{
 			name:          "batch query from doc - aggregate shakespeare",
-			sqlIn:         "SELECT corpus, SUM(word_count) as total_words, COUNT(1) as unique_words FROM $table GROUP BY corpus",
-			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "bigquery-public-data.samples.shakespeare"}},
-			sqlOut:        "SELECT corpus, SUM(word_count) as total_words, COUNT(1) as unique_words FROM `bigquery_public_data.samples.shakespeare` GROUP BY corpus",
+			sqlIn:         "SELECT corpus, SUM(word_count) as total_words, COUNT(1) as unique_words FROM $project.$dataset.$table GROUP BY corpus",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$project", Value: "bigquery-public-data"}, {Name: "$dataset", Value: "samples"}, {Name: "$table", Value: "shakespeare"}},
+			sqlOut:        "SELECT corpus, SUM(word_count) as total_words, COUNT(1) as unique_words FROM `bigquery_public_data`.`samples`.`shakespeare` GROUP BY corpus",
 			parametersOut: []bigquery.QueryParameter{},
 		},
 		{
@@ -126,9 +126,9 @@ func TestQueryTranslate(t *testing.T) {
 		},
 		{
 			name:          "dry run query from doc - name count by state",
-			sqlIn:         "SELECT name, COUNT(*) as name_count FROM $table WHERE state = @state GROUP BY name",
-			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "bigquery-public-data.usa_names.usa_1910_2013"}, {Name: "@state", Value: "WA"}},
-			sqlOut:        "SELECT name, COUNT(*) as name_count FROM `bigquery_public_data.usa_names.usa_1910_2013` WHERE state = @state GROUP BY name",
+			sqlIn:         "SELECT name, COUNT(*) as name_count FROM $project.$dataset.$table WHERE state = @state GROUP BY name",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$project", Value: "bigquery-public-data"}, {Name: "$dataset", Value: "usa_names"}, {Name: "$table", Value: "usa_1910_2013"}, {Name: "@state", Value: "WA"}},
+			sqlOut:        "SELECT name, COUNT(*) as name_count FROM `bigquery_public_data`.`usa_names`.`usa_1910_2013` WHERE state = @state GROUP BY name",
 			parametersOut: []bigquery.QueryParameter{{Name: "state", Value: "WA"}}},
 		{
 			name:          "create table with identifiers",
@@ -139,9 +139,9 @@ func TestQueryTranslate(t *testing.T) {
 		},
 		{
 			name:          "delete with identifier",
-			sqlIn:         "DELETE FROM $table WHERE id = @id",
-			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "mydataset.mytable"}, {Name: "@id", Value: 1}},
-			sqlOut:        "DELETE FROM `mydataset.mytable` WHERE id = @id",
+			sqlIn:         "DELETE FROM $dataset.$table WHERE id = @id",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$dataset", Value: "mydataset"}, {Name: "$table", Value: "mytable"}, {Name: "@id", Value: 1}},
+			sqlOut:        "DELETE FROM `mydataset`.`mytable` WHERE id = @id",
 			parametersOut: []bigquery.QueryParameter{{Name: "id", Value: 1}},
 		},
 		{
@@ -188,9 +188,9 @@ func TestQueryTranslate(t *testing.T) {
 		},
 		{
 			name:          "case statement with identifier and params",
-			sqlIn:         "SELECT id, CASE WHEN status = @status1 THEN 'active' WHEN status = @status2 THEN 'inactive' END as status_label FROM $table",
-			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "mydataset.mytable"}, {Name: "@status1", Value: 1}, {Name: "@status2", Value: 0}},
-			sqlOut:        "SELECT id, CASE WHEN status = @status1 THEN 'active' WHEN status = @status2 THEN 'inactive' END as status_label FROM `mydataset.mytable`",
+			sqlIn:         "SELECT id, CASE WHEN status = @status1 THEN 'active' WHEN status = @status2 THEN 'inactive' END as status_label FROM $dataset.$table",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$dataset", Value: "mydataset"}, {Name: "$table", Value: "mytable"}, {Name: "@status1", Value: 1}, {Name: "@status2", Value: 0}},
+			sqlOut:        "SELECT id, CASE WHEN status = @status1 THEN 'active' WHEN status = @status2 THEN 'inactive' END as status_label FROM `mydataset`.`mytable`",
 			parametersOut: []bigquery.QueryParameter{{Name: "status1", Value: 1}, {Name: "status2", Value: 0}},
 		},
 		// Error cases - invalid parameter names

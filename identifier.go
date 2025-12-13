@@ -6,7 +6,7 @@ import (
 )
 
 // characters that are allowed in unquoted identifiers
-const identifierChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_/."
+const identifierChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
 
 func filterIdentifierChars(s string) string {
 	return strings.Map(func(r rune) rune {
