@@ -1,7 +1,7 @@
 # saferbq
 
 A Go wrapper for the BigQuery SDK that solves the identifier injection problem
-by enabling dollar-sign (`$`) syntax for table and dataset names that need
+by enabling dollar-sign `$` syntax for table and dataset names that need
 backtick quoting.
 
 ## The Problem
