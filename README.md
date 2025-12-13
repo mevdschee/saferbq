@@ -97,16 +97,32 @@ defer client.Close()
 
 ### Basic Query with Table Identifier
 
-The `$table` parameter will be replaced with `myproject.mydataset.mytable`
+Use a `$` parameter for the table name:
 
 ```go
 q := client.Query("SELECT * FROM $table WHERE id = 1")
 q.Parameters = []bigquery.QueryParameter{
-    {Name: "$table", Value: "myproject.mydataset.mytable"},
+    {Name: "$table", Value: "my-table"},
 }
 job, _ := q.Run(ctx)
 
-// Results: SELECT * FROM `myproject.mydataset.mytable` WHERE id = 1
+// Results: SELECT * FROM `my-table` WHERE id = 1
+```
+
+### Specifying a Path with multiple Identifiers
+
+Use separate `$` parameters for path segments:
+
+```go
+q := client.Query("SELECT * FROM $project.$dataset.$table WHERE id = 1")
+q.Parameters = []bigquery.QueryParameter{
+    {Name: "$project", Value: "my-project"},
+    {Name: "$dataset", Value: "my-dataset"},
+    {Name: "$table", Value: "my-table"},
+}
+job, _ := q.Run(ctx)
+
+// Results: SELECT * FROM `my-project`.`my-dataset`.`my-table` WHERE id = 1
 ```
 
 ### Mixing $ Identifiers with @ Parameters
@@ -117,12 +133,12 @@ parameter stays as a BigQuery parameter (which is safe for data values).
 ```go
 q := client.Query("SELECT * FROM $table WHERE corpus = @corpus")
 q.Parameters = []bigquery.QueryParameter{
-    {Name: "$table", Value: "mytable"},
+    {Name: "$table", Value: "my-table"},
     {Name: "@corpus", Value: "en-US"},
 }
 job, _ := q.Run(ctx)
 
-// Results: SELECT * FROM `mytable` WHERE corpus = @corpus
+// Results: SELECT * FROM `my-table` WHERE corpus = @corpus
 ```
 
 ### Combining with Positional Parameters
@@ -130,17 +146,15 @@ job, _ := q.Run(ctx)
 You can mix the named parameters with positional parameters.
 
 ```go
-q := client.Query("SELECT * FROM $project.$dataset.$table WHERE id = ? AND status = ?")
+q := client.Query("SELECT * FROM $table WHERE id = ? AND status = ?")
 q.Parameters = []bigquery.QueryParameter{
-    {Name: "$project", Value: "myproject"},
-    {Name: "$dataset", Value: "mydataset"},
-    {Name: "$table", Value: "mytable"},
+    {Name: "$table", Value: "my-table"},
     {Value: 1},      // First ?
     {Value: "active"}, // Second ?
 }
 job, _ := q.Run(ctx)
 
-// Results: SELECT * FROM `myproject`.`mydataset`.`mytable` WHERE id = ? AND status = ?
+// Results: SELECT * FROM `my-table` WHERE id = ? AND status = ?
 ```
 
 ## How It Works
