@@ -211,8 +211,10 @@ Examples of valid identifier values:
 {Name: "$table", Value: "my table"}           // Spaces allowed
 {Name: "$table", Value: "table_123"}          // Underscores and numbers allowed
 {Name: "$table", Value: "表格"}                // Unicode letters allowed
-{Name: "$table", Value: "table`; DROP TABLE"} // Sanitized to: table_ DROP TABLE
+{Name: "$table", Value: "table`; DROP TABLE"} // Sanitized to: table__ DROP TABLE
 ```
+
+Examples of invalid characters in identifier values: `./`
 
 **Important**: To dynamically reference a full path like `project.dataset.table`
 or `roles/bigquery.dataViewer`, use 3 separate parameters.

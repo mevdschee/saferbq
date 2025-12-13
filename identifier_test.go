@@ -75,6 +75,21 @@ func TestQuoteIdentifier(t *testing.T) {
 			identifierIn:  12345,
 			identifierOut: "`12345`",
 		},
+		{
+			name:          "identifier with emoji",
+			identifierIn:  "mytable😀",
+			identifierOut: "`mytable_`",
+		},
+		{
+			name:          "identifier with newline",
+			identifierIn:  "mytable\nname",
+			identifierOut: "`mytable_name`",
+		},
+		{
+			name:          "identifier with all invalid chars",
+			identifierIn:  "!@#$%^&*()./<>?\\|`~",
+			identifierOut: "`___________________`",
+		},
 	}
 
 	for _, tt := range tests {
