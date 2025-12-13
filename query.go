@@ -22,9 +22,14 @@ var (
 	namedParamRegex = regexp.MustCompile(`@[a-zA-Z_][a-zA-Z0-9_]*`)
 )
 
+const (
+	// maxIdentifierBytes is the maximum length for a BigQuery identifier (without backticks)
+	maxIdentifierBytes = 1024
+)
+
 // translate converts dollar-sign parameters to BigQuery's native syntax.
 // @param stays as @param (native BigQuery parameters).
-// $identifier gets replaced with quoteIdentifier(value).
+// $identifier gets replaced with QuoteIdentifier(value).
 func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery.QueryParameter, error) {
 	// Build parameters and identifiers map
 	parameters := map[string]bigquery.QueryParameter{}
@@ -99,11 +104,11 @@ func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery
 	// Apply all replacements
 	result := sql
 	for identifier, value := range identifiers {
-		quoted := quoteIdentifier(value)
+		quoted := QuoteIdentifier(value)
 		if len(quoted) == 2 {
 			return "", nil, fmt.Errorf("identifier %s is empty", identifier)
 		}
-		if len(quoted) > 1026 {
+		if len(quoted) > maxIdentifierBytes+2 { // +2 for backticks
 			return "", nil, fmt.Errorf("identifier %s is too long", identifier)
 		}
 		result = strings.ReplaceAll(result, identifier, quoted)
@@ -113,13 +118,18 @@ func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery
 
 // translate applies the translation of $ identifiers to the Query's SQL and parameters.
 func (q *Query) translate() error {
-	originalSql := q.QueryConfig.Q
+	originalSQL := q.QueryConfig.Q
+	if originalSQL == "" {
+		return fmt.Errorf("query SQL cannot be empty")
+	}
+
 	parameters := q.Parameters
-	translatedSQL, translatedParams, err := translate(originalSql, parameters)
+	translatedSQL, translatedParams, err := translate(originalSQL, parameters)
 	if err != nil {
 		return fmt.Errorf("failed to translate query: %w", err)
 	}
-	q.originalSQL = originalSql
+
+	q.originalSQL = originalSQL
 	q.QueryConfig.Q = translatedSQL
 	q.Parameters = translatedParams
 	return nil

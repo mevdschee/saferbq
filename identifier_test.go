@@ -11,6 +11,11 @@ func TestQuoteIdentifier(t *testing.T) {
 		identifierOut string
 	}{
 		{
+			name:          "nil",
+			identifierIn:  nil,
+			identifierOut: "``",
+		},
+		{
 			name:          "empty",
 			identifierIn:  "",
 			identifierOut: "``",
@@ -94,9 +99,9 @@ func TestQuoteIdentifier(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			identifierOut := quoteIdentifier(tt.identifierIn)
+			identifierOut := QuoteIdentifier(tt.identifierIn)
 			if identifierOut != tt.identifierOut {
-				t.Errorf("quoteIdentifier(%v) = %q, want %q", tt.identifierIn, identifierOut, tt.identifierOut)
+				t.Errorf("QuoteIdentifier(%v) = %q, want %q", tt.identifierIn, identifierOut, tt.identifierOut)
 			}
 		})
 	}
@@ -114,7 +119,7 @@ func BenchmarkQuoteIdentifier(b *testing.B) {
 	for _, tc := range testCases {
 		b.Run(tc.name, func(b *testing.B) {
 			for b.Loop() {
-				_ = quoteIdentifier(tc.input)
+				_ = QuoteIdentifier(tc.input)
 			}
 		})
 	}
