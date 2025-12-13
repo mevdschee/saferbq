@@ -24,6 +24,7 @@ const (
 func filterIdentifierChars(s string) string {
 	// start building the result
 	var builder strings.Builder
+	builder.Grow(len(s))
 	for _, r := range s {
 		if unicode.IsLetter(r) ||
 			unicode.IsMark(r) ||
