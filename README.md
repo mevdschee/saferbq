@@ -68,7 +68,7 @@ q.Parameters = []bigquery.QueryParameter{{Name: "$table", Value: tableName}}
 // NB: Fails safely as no such table exists, customers table unaffected.
 ```
 
-Note how you have to create the client from the `saferbq` package instead of the
+NB: You have to create the client from the `saferbq` package instead of the
 `bigquery` package.
 
 ## Installation
