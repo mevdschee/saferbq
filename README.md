@@ -178,11 +178,15 @@ q.Parameters = []bigquery.QueryParameter{
 
 ## Parameter Types
 
-| Syntax        | Purpose                  | Example                    | Result                                        |
-| ------------- | ------------------------ | -------------------------- | --------------------------------------------- |
-| `$identifier` | Table/dataset names      | `FROM $table`              | `` FROM `mytable` ``                          |
-| `@parameter`  | Data values (named)      | `WHERE user_id = @user_id` | `WHERE user_id = @user_id` (BigQuery handles) |
-| `?`           | Data values (positional) | `WHERE id = ?`             | `WHERE id = ?` (BigQuery handles)             |
+| Syntax        | Purpose                  | Example                    | Result                     |
+| ------------- | ------------------------ | -------------------------- | -------------------------- |
+| `$identifier` | Table/dataset names      | `FROM $table`              | `` FROM `mytable` ``       |
+| `@parameter`  | Data values (named)      | `WHERE user_id = @user_id` | `WHERE user_id = @user_id` |
+| `?`           | Data values (positional) | `WHERE id = ?`             | `WHERE id = ?`             |
+
+Only the `$` parameters are replaced, while the `@` parameters and `?`
+(positional) parameters are handled by the normal BigQuery parameterized query
+mechanism.
 
 ## Safety Features
 
