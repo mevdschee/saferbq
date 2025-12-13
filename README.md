@@ -91,7 +91,7 @@ import (
 )
 
 ctx := context.Background()
-client, _ := saferbq.NewClient(ctx, projId) // instead of bigquery.NewClient(...)
+client, _ := saferbq.NewClient(ctx, projId) // replaces: bigquery.NewClient(...)
 defer client.Close()
 ```
 
