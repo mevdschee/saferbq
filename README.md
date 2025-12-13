@@ -190,7 +190,7 @@ Parameter names in your SQL must follow these rules:
 - Must followed by a letter or underscore
 - May be follow by one or more alphanumeric characters or underscore
 
-Valid: `$table`, `$my_table`, `$table1`
+Valid: `$table`, `$my_table`, `$table1`, `__private`
 
 ### Identifier Values (BigQuery tables/datasets)
 
