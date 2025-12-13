@@ -128,6 +128,34 @@ func TestQuoteIdentifier(t *testing.T) {
 	}
 }
 
+func TestIsValidIdentifierChar(t *testing.T) {
+	tests := []struct {
+		name  string
+		char  rune
+		valid bool
+	}{
+		{"letter", 'a', true},
+		{"capital letter", 'Z', true},
+		{"mark", '\u0301', true}, // combining acute accent
+		{"number", '1', true},
+		{"underscore", '_', true},
+		{"dash", '-', true},
+		{"space", ' ', true},
+		{"backtick", '`', false},
+		{"semicolon", ';', false},
+		{"unicode letter", '表', true},
+		{"emoji", '😀', false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isValidIdentifierChar(tt.char); got != tt.valid {
+				t.Errorf("isValidIdentifierChar(%q) = %v, want %v", tt.char, got, tt.valid)
+			}
+		})
+	}
+}
+
 func BenchmarkQuoteIdentifier(b *testing.B) {
 	testCases := []struct {
 		name  string

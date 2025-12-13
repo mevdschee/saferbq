@@ -6,16 +6,25 @@ import (
 	"unicode"
 )
 
-// filterIdentifierChars filters out Unicode characters that do not fall in category
+// isValidIdentifierChar checks if a rune is valid for BigQuery identifiers
+// Valid characters are defined as:
 // - L (letter)
 // - M (mark)
 // - N (number),
 // - Pc (connector, including underscore)
 // - Pd (dash)
 // - Zs (space).
-// and replaces them with underscores.
 // This follows BigQuery's table naming rules from:
 // https://docs.cloud.google.com/bigquery/docs/tables#table_naming
+func isValidIdentifierChar(r rune) bool {
+	return unicode.IsLetter(r) ||
+		unicode.IsMark(r) ||
+		unicode.IsNumber(r) ||
+		unicode.In(r, unicode.Pc, unicode.Pd, unicode.Zs)
+}
+
+// filterIdentifierChars checks all characters for validity, filters out invalid
+// Unicode characters and replaces them with underscores.
 func filterIdentifierChars(s string) (string, string) {
 	// start building the result
 	var result strings.Builder
@@ -23,10 +32,7 @@ func filterIdentifierChars(s string) (string, string) {
 	var replaced strings.Builder
 	replacedMap := make(map[rune]bool)
 	for _, r := range s {
-		if unicode.IsLetter(r) ||
-			unicode.IsMark(r) ||
-			unicode.IsNumber(r) ||
-			unicode.In(r, unicode.Pc, unicode.Pd, unicode.Zs) {
+		if isValidIdentifierChar(r) {
 			result.WriteRune(r)
 		} else {
 			result.WriteRune('_')

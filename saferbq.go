@@ -1,31 +1,11 @@
-// saferbq is a package that provides a wrapper around the BigQuery Go SDK. It
-// enables dollar-sign parameter syntax for safe identifier quoting. This is
-// useful for operations where user input is used as table or dataset names.
+// Package saferbq provides a wrapper for the BigQuery SDK that prevents SQL injection
+// in DDL operations by enabling dollar-sign $ syntax for table and dataset names.
 //
-// The native BigQuery SDK uses @ for named parameters (e.g., @param) and ? for
-// positional parameters. This package adds $ syntax (e.g., $param) for
-// identifiers that need backtick quoting.
+// The package introduces $identifier syntax that automatically wraps identifiers in
+// backticks, validates them for invalid characters, and works alongside native
+// BigQuery @parameters and ? positional parameters.
 //
-// Example usage:
-//
-//	client, err := saferbq.NewClient(ctx, "my-project")
-//	if err != nil {
-//	    log.Fatal(err)
-//	}
-//	query := client.Query("SELECT * FROM $table WHERE id = @id")
-//	query.Parameters = []bigquery.QueryParameter{
-//	    {Name: "$table", Value: "my-dataset.my-table"},
-//	    {Name: "@id", Value: 123},
-//	}
-//	it, err := query.Read(ctx)
-//	if err != nil {
-//	    log.Fatal(err)
-//	}
-//	// Process results...
-//
-// This package ensures that table identifiers are safely quoted with backticks
-// and that any invalid characters are replaced with underscores, following
-// BigQuery's naming conventions.
+// For more information, see: https://github.com/mevdschee/saferbq
 
 package saferbq
 
