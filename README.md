@@ -62,7 +62,7 @@ ctx := context.Background()
 client, _ := saferbq.NewClient(ctx, "my-project")
 defer client.Close()
 
-// $tablename will be replaced with `my_project_my_dataset_my_table`
+// $tablename will be replaced with `my_project.my_dataset.my_table`
 sql := "SELECT * FROM $tablename WHERE id = 1"
 q := client.Query(sql)
 q.Parameters = []bigquery.QueryParameter{
@@ -70,7 +70,7 @@ q.Parameters = []bigquery.QueryParameter{
 }
 
 it, _ := q.Read(ctx)
-// Results: SELECT * FROM `my_project_my_dataset_my_table` WHERE id = 1
+// Results: SELECT * FROM `my_project.my_dataset.my_table` WHERE id = 1
 ```
 
 ### Mixing $ Identifiers with @ Parameters
