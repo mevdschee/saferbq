@@ -25,11 +25,11 @@ var (
 // @param stays as @param (native BigQuery parameters).
 // $identifier gets replaced with QuoteIdentifier(value).
 func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery.QueryParameter, error) {
-
 	// Build parameters and identifiers map
 	parameters := map[string]bigquery.QueryParameter{}
 	identifiers := map[string]any{}
-	allParams := []bigquery.QueryParameter{}
+	allParameters := []bigquery.QueryParameter{}
+	positionalParameterCount := 0
 	for _, p := range params {
 		paramName := p.Name
 		if len(paramName) > 0 {
@@ -47,7 +47,7 @@ func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery
 				//		}
 				//		replace = append(replace, newParamName)
 				//		parameters[newParamName] = newParam
-				//		allParams = append(allParams, newParam)
+				//		allParameters = append(allParameters, newParam)
 				//	}
 				//	sql = strings.ReplaceAll(sql, paramName, strings.Join(replace, ", "))
 				//	continue
@@ -55,17 +55,18 @@ func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery
 				// normal @param case
 				p.Name = paramName[1:]
 				parameters[paramName] = p
-				allParams = append(allParams, p)
+				allParameters = append(allParameters, p)
 			case '$':
 				identifiers[paramName] = p.Value
 			default:
 				return "", nil, fmt.Errorf("invalid parameter name %s: must start with @ or $", paramName)
 			}
 		} else {
-			allParams = append(allParams, p)
+			// Positional parameter
+			positionalParameterCount++
+			allParameters = append(allParameters, p)
 		}
 	}
-
 	// Find all identifiers in the SQL
 	identifiersInSql := map[string]bool{}
 	matches := identifierParamRegex.FindAllStringSubmatch(sql, -1)
@@ -105,13 +106,20 @@ func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery
 			return "", nil, fmt.Errorf("identifier %s not provided in parameters", identifier)
 		}
 	}
+	// Count positional parameters in SQL
+	positionalParamsInSql := strings.Count(sql, "?")
+	if positionalParamsInSql > positionalParameterCount {
+		return "", nil, fmt.Errorf("not enough positional parameters: found %d, provided %d", positionalParamsInSql, positionalParameterCount)
+	} else if positionalParamsInSql < positionalParameterCount {
+		return "", nil, fmt.Errorf("too many positional parameters: found %d, provided %d", positionalParamsInSql, positionalParameterCount)
+	}
 	// Apply all replacements
 	result := sql
 	for identifier, value := range identifiers {
 		quoted := quoteIdentifier(value)
 		result = strings.ReplaceAll(result, identifier, quoted)
 	}
-	return result, allParams, nil
+	return result, allParameters, nil
 }
 
 // translate applies the translation of $ identifiers to the Query's SQL and parameters.

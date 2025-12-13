@@ -88,37 +88,6 @@ func TestQueryTranslate(t *testing.T) {
 		//	sqlOut:        "SELECT * FROM `mytable` WHERE corpus IN (@corpus_1, @corpus_2)",
 		//	parametersOut: []bigquery.QueryParameter{{Name: "corpus_1", Value: "value1"}, {Name: "corpus_2", Value: "value2"}},
 		//},
-		// Error cases
-		{
-			name:         "missing identifier parameter",
-			sqlIn:        "SELECT * FROM $tablename WHERE id = 1",
-			parametersIn: []bigquery.QueryParameter{},
-			errorMessage: "identifier $tablename not provided in parameters",
-		},
-		{
-			name:         "missing @ parameter",
-			sqlIn:        "SELECT * FROM table WHERE corpus = @corpus",
-			parametersIn: []bigquery.QueryParameter{},
-			errorMessage: "parameter @corpus not provided in parameters",
-		},
-		{
-			name:         "extra identifier parameter",
-			sqlIn:        "SELECT * FROM table WHERE id = 1",
-			parametersIn: []bigquery.QueryParameter{{Name: "$tablename", Value: "mytable"}},
-			errorMessage: "identifier $tablename not found in query",
-		},
-		{
-			name:         "extra @ parameter",
-			sqlIn:        "SELECT * FROM table WHERE id = 1",
-			parametersIn: []bigquery.QueryParameter{{Name: "@corpus", Value: "corpus_value"}},
-			errorMessage: "parameter @corpus not found in query",
-		},
-		{
-			name:         "invalid parameter name",
-			sqlIn:        "SELECT * FROM table WHERE id = 1",
-			parametersIn: []bigquery.QueryParameter{{Name: "corpus", Value: "corpus_value"}},
-			errorMessage: "invalid parameter name corpus: must start with @ or $",
-		},
 		// Test cases from documentation examples
 		{
 			name:          "positional params from doc - shakespeare corpus",
@@ -223,6 +192,63 @@ func TestQueryTranslate(t *testing.T) {
 			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "mydataset.mytable"}, {Name: "@status1", Value: 1}, {Name: "@status2", Value: 0}},
 			sqlOut:        "SELECT id, CASE WHEN status = @status1 THEN 'active' WHEN status = @status2 THEN 'inactive' END as status_label FROM `mydataset.mytable`",
 			parametersOut: []bigquery.QueryParameter{{Name: "status1", Value: 1}, {Name: "status2", Value: 0}},
+		},
+		// Error cases - invalid parameter names
+		{
+			name:         "invalid parameter name",
+			sqlIn:        "SELECT * FROM table WHERE id = 1",
+			parametersIn: []bigquery.QueryParameter{{Name: "corpus", Value: "corpus_value"}},
+			errorMessage: "invalid parameter name corpus: must start with @ or $",
+		},
+		// Error cases - positional parameter validation
+		{
+			name:         "missing positional parameter",
+			sqlIn:        "SELECT * FROM $table WHERE id = ? AND status = ?",
+			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: "mytable"}, {Value: 1}},
+			errorMessage: "not enough positional parameters: found 2, provided 1",
+		},
+		{
+			name:         "extra positional parameter",
+			sqlIn:        "SELECT * FROM $table WHERE id = ?",
+			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: "mytable"}, {Value: 1}, {Value: 2}},
+			errorMessage: "too many positional parameters: found 1, provided 2",
+		},
+		{
+			name:         "no positional parameters in query but some provided",
+			sqlIn:        "SELECT * FROM $table WHERE id = @id",
+			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: "mytable"}, {Name: "@id", Value: 1}, {Value: 999}},
+			errorMessage: "too many positional parameters: found 0, provided 1",
+		},
+		{
+			name:         "multiple missing positional parameters",
+			sqlIn:        "SELECT * FROM $table WHERE id = ? AND status = ? AND created_at > ? AND updated_at < ?",
+			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: "mytable"}, {Value: 1}},
+			errorMessage: "not enough positional parameters: found 4, provided 1",
+		},
+		// Error cases - missing named parameters
+		{
+			name:         "missing named parameter",
+			sqlIn:        "SELECT * FROM $table WHERE status = @status",
+			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: "mytable"}},
+			errorMessage: "parameter @status not provided in parameters",
+		},
+		{
+			name:         "missing identifier",
+			sqlIn:        "SELECT * FROM $table WHERE id = 1",
+			parametersIn: []bigquery.QueryParameter{},
+			errorMessage: "identifier $table not provided in parameters",
+		},
+		{
+			name:         "unused named parameter",
+			sqlIn:        "SELECT * FROM $table WHERE id = 1",
+			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: "mytable"}, {Name: "@unused", Value: "value"}},
+			errorMessage: "parameter @unused not found in query",
+		},
+		{
+			name:         "unused identifier",
+			sqlIn:        "SELECT * FROM $table WHERE id = 1",
+			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: "mytable"}, {Name: "$unused", Value: "value"}},
+			errorMessage: "identifier $unused not found in query",
 		},
 	}
 

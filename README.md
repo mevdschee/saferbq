@@ -6,20 +6,13 @@ dollar-sign `$` syntax for table and dataset names that need backtick quoting.
 ## The Problem
 
 When building dynamic BigQuery queries, you often need to reference table or
-dataset names that:
-
-- Are dynamically determined at runtime
-- Need to be used in DDL operations (CREATE, ALTER, DROP)
-- Are escaped by backticks
+dataset names that are dynamically determined at runtime and are escaped by
+backticks. This happens for instance in DDL operations (CREATE, ALTER, DROP).
 
 BigQuery's official Go SDK uses `@` for named parameters and `?` for positional
 parameters, but these cannot be used for table/dataset identifiers in SQL
 statements that are escaped by backticks. You're forced to use string
-concatenation, which is:
-
-- **Unsafe**: Opens the door to SQL injection
-- **Error-prone**: Manual backtick quoting is tedious
-- **Fragile**: Special characters break queries
+concatenation, which opens the door to **SQL injection**.
 
 ## The Solution
 
