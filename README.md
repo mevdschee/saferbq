@@ -9,13 +9,14 @@ backtick quoting.
 When building dynamic BigQuery queries, you often need to reference table or
 dataset names that:
 
-- Contain hyphens (e.g., `my-dataset.my-table`)
 - Are dynamically determined at runtime
 - Need to be used in DDL operations (CREATE, ALTER, DROP)
+- Are escaped by backticks
 
 BigQuery's official Go SDK uses `@` for named parameters and `?` for positional
 parameters, but these cannot be used for table/dataset identifiers in SQL
-statements. You're forced to use string concatenation, which is:
+statements that are escaped by backticks. You're forced to use string
+concatenation, which is:
 
 - **Unsafe**: Opens the door to SQL injection
 - **Error-prone**: Manual backtick quoting is tedious
@@ -37,7 +38,7 @@ sql := fmt.Sprintf("SELECT * FROM `%s` WHERE id = 1", unsafetable)
 // Use safe $ parameters:
 sql := "SELECT * FROM $table WHERE id = 1"
 q.Parameters = []bigquery.QueryParameter{
-    {Name: "$table", Value: "my-project.my-dataset.my-table"},
+    {Name: "$table", Value: "myproject.mydataset.mytable"},
 }
 ```
 
@@ -59,18 +60,18 @@ import (
 )
 
 ctx := context.Background()
-client, _ := saferbq.NewClient(ctx, "my-project")
+client, _ := saferbq.NewClient(ctx, "myproject")
 defer client.Close()
 
-// $table will be replaced with `my_project.my_dataset.my_table`
+// $table will be replaced with `myproject.mydataset.mytable`
 sql := "SELECT * FROM $table WHERE id = 1"
 q := client.Query(sql)
 q.Parameters = []bigquery.QueryParameter{
-    {Name: "$table", Value: "my-project.my-dataset.my-table"},
+    {Name: "$table", Value: "myproject.mydataset.mytable"},
 }
 
 it, _ := q.Read(ctx)
-// Results: SELECT * FROM `my_project.my_dataset.my_table` WHERE id = 1
+// Results: SELECT * FROM `myproject.mydataset.mytable` WHERE id = 1
 ```
 
 ### Mixing $ Identifiers with @ Parameters
@@ -81,11 +82,11 @@ it, _ := q.Read(ctx)
 sql := "SELECT * FROM $table WHERE corpus = @corpus"
 q := client.Query(sql)
 q.Parameters = []bigquery.QueryParameter{
-    {Name: "$table", Value: "my-table"},
+    {Name: "$table", Value: "mytable"},
     {Name: "@corpus", Value: "en-US"},
 }
 
-// Results: SELECT * FROM `my_table` WHERE corpus = @corpus
+// Results: SELECT * FROM `mytable` WHERE corpus = @corpus
 ```
 
 ### DDL Operations
@@ -101,11 +102,11 @@ sql := `CREATE TABLE IF NOT EXISTS $table (
 )`
 q := client.Query(sql)
 q.Parameters = []bigquery.QueryParameter{
-    {Name: "$table", Value: "my-dataset.my-new-table"},
+    {Name: "$table", Value: "mydataset.mynew-table"},
 }
 
 job, _ := q.Run(ctx)
-// Results: CREATE TABLE IF NOT EXISTS `my_dataset_my_new_table` (...)
+// Results: CREATE TABLE IF NOT EXISTS `mydataset_mynew_table` (...)
 ```
 
 ### Multiple Table Identifiers
@@ -127,14 +128,14 @@ q.Parameters = []bigquery.QueryParameter{
 sql := "SELECT * FROM $project.$dataset.$table WHERE id = ? AND status = ?"
 q := client.Query(sql)
 q.Parameters = []bigquery.QueryParameter{
-    {Name: "$project", Value: "my-project"},
-    {Name: "$dataset", Value: "my-dataset"},
-    {Name: "$table", Value: "my-table"},
+    {Name: "$project", Value: "myproject"},
+    {Name: "$dataset", Value: "mydataset"},
+    {Name: "$table", Value: "mytable"},
     {Value: 1},      // First ?
     {Value: "active"}, // Second ?
 }
 
-// Results: SELECT * FROM `my_project`.`my_dataset`.`my_table` WHERE id = ? AND status = ?
+// Results: SELECT * FROM `myproject`.`mydataset`.`mytable` WHERE id = ? AND status = ?
 ```
 
 ## How It Works
@@ -153,7 +154,7 @@ q.Parameters = []bigquery.QueryParameter{
 
 | Syntax        | Purpose                  | Example        | Result                        |
 | ------------- | ------------------------ | -------------- | ----------------------------- |
-| `$identifier` | Table/dataset names      | `$table`       | `` `my_table` ``              |
+| `$identifier` | Table/dataset names      | `$table`       | `` `mytable` ``               |
 | `@parameter`  | Data values (named)      | `@user_id`     | `@user_id` (BigQuery handles) |
 | `?`           | Data values (positional) | `WHERE id = ?` | `?` (BigQuery handles)        |
 
