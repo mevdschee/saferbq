@@ -81,17 +81,17 @@ func TestQuoteIdentifier(t *testing.T) {
 			identifierOut: "`mytable_`",
 		},
 		{
-			name:          "control characters only",
-			identifierIn:  "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F",
-			identifierOut: "`________________________________`",
+			name:          "control characters only (0-31,127)",
+			identifierIn:  "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F",
+			identifierOut: "`_________________________________`",
 		},
 		{
-			name:          "printable 7 bit ASCII",
+			name:          "printable 7 bit ASCII (32-126)",
 			identifierIn:  " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
 			identifierOut: "` ____________-__0123456789_______ABCDEFGHIJKLMNOPQRSTUVWXYZ______abcdefghijklmnopqrstuvwxyz____`",
 		},
 		{
-			name:          "extended ascii characters",
+			name:          "extended ascii characters (128-255)",
 			identifierIn:  "ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜø£Ø×ƒáíóúñÑªº¿®¬½¼¡«»░▒▓│┤ÁÂÀ©╣║╗╝¢¥┐└┴┬├─┼ãÃ╚╔╩╦╠═╬¤ðÐÊËÈıÍÎÏ┘┌█▄¦Ì▀ÓßÔÒõÕµþÞÚÛÙýÝ¯´≡±‗¾¶§÷¸°¨·¹³²■ ",
 			identifierOut: "`ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜø_Ø_ƒáíóúñÑªº___½¼________ÁÂÀ______________ãÃ________ðÐÊËÈıÍÎÏ_____Ì_ÓßÔÒõÕµþÞÚÛÙýÝ_____¾_______¹³²_ `",
 		},
