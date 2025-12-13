@@ -159,15 +159,14 @@ job, _ := q.Run(ctx)
 
 ## How It Works
 
-1. **Identifier Detection**: Finds all `$identifier` parameters in your SQL
-2. **Sanitization**: Converts special characters (backticks, etc.) to
-   underscores
-3. **Backtick Quoting**: Wraps sanitized identifiers in backticks
-4. **Validation**: Ensures all parameters are provided and present in SQL
-5. **Replacement**: Substitutes `$identifier` with `` `safe_identifier` ``
-   before execution
-6. **Pass-through**: Native `@parameters` and `?` are handled by BigQuery SDK as
-   usual
+- **Identifier Detection**: Finds all `$identifier` parameters in your SQL
+- **Sanitization**: Converts special characters (backticks, etc.) to underscores
+- **Backtick Quoting**: Wraps sanitized identifiers in backticks
+- **Validation**: Ensures all parameters are provided and present in SQL
+- **Replacement**: Substitutes `$identifier` with `` `safe_identifier` `` before
+  execution
+- **Pass-through**: Native `@parameters` and `?` are handled by BigQuery SDK as
+  usual
 
 ## Parameter Types
 
