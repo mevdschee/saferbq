@@ -13,9 +13,16 @@ import (
 // - Pc (connector, including underscore)
 // - Pd (dash)
 // - Zs (space).
-// from: https://docs.cloud.google.com/bigquery/docs/tables#table_naming
+// and replaces them with underscores.
+// Length of the identifier is llimited to 1024 characters.
+// This follows BigQuery's table naming rules from:
+// https://docs.cloud.google.com/bigquery/docs/tables#table_naming
 func filterIdentifierChars(s string) string {
-	//implement according to the description
+	// limit length to 1024 characters
+	if len(s) > 1024 {
+		s = s[:1024]
+	}
+	// start building the result
 	var builder strings.Builder
 	for _, r := range s {
 		if unicode.IsLetter(r) ||

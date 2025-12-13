@@ -181,6 +181,43 @@ Only the `$` parameters are replaced, while the `@` parameters and `?`
 (positional) parameters are handled by the normal BigQuery parameterized query
 mechanism.
 
+## Naming Restrictions
+
+### Parameter Names (in SQL)
+
+Parameter names in your SQL must follow these rules:
+
+- Must start with `$` or `@` for identifiers or named parameters
+- Must followed by a letter or underscore
+- May be follow by one or more alphanumeric characters or underscore
+
+Valid: `$table`, `$my_table`, `$table1`
+
+### Identifier Values (BigQuery tables/datasets)
+
+The actual identifier values you provide can contain a much wider range of
+characters, following
+[BigQuery's identifier rules](https://cloud.google.com/bigquery/docs/tables#table_naming):
+
+- **Allowed**: Letters (any Unicode letter), marks, numbers, connector
+  punctuation (including `_`), dashes (`-`), and spaces
+- **Sanitized**: All other characters (including backticks, semicolons, quotes,
+  etc.) are automatically converted to underscores
+- **Length**: Up to 1,024 characters
+
+Examples of valid identifier values:
+
+```go
+{Name: "$table", Value: "my-table"}           // Dashes allowed
+{Name: "$table", Value: "my table"}           // Spaces allowed
+{Name: "$table", Value: "table_123"}          // Underscores and numbers allowed
+{Name: "$table", Value: "表格"}                // Unicode letters allowed
+{Name: "$table", Value: "table`; DROP TABLE"} // Sanitized to: table_ DROP TABLE
+```
+
+**Important**: To reference a full paths like `project.dataset.table` or
+`roles/bigquery.dataViewer`, use separate parameters.
+
 ## Safety Features
 
 - **No SQL Injection**: Identifiers are sanitized and quoted, not concatenated
