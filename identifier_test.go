@@ -81,14 +81,19 @@ func TestQuoteIdentifier(t *testing.T) {
 			identifierOut: "`mytable_`",
 		},
 		{
-			name:          "identifier with newline",
-			identifierIn:  "mytable\nname",
-			identifierOut: "`mytable_name`",
+			name:          "control characters only",
+			identifierIn:  "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F",
+			identifierOut: "`________________________________`",
 		},
 		{
-			name:          "identifier with all invalid chars",
-			identifierIn:  "!@#$%^&*()./<>?\\|`~",
-			identifierOut: "`___________________`",
+			name:          "printable 7 bit ASCII",
+			identifierIn:  " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
+			identifierOut: "` ____________-__0123456789_______ABCDEFGHIJKLMNOPQRSTUVWXYZ______abcdefghijklmnopqrstuvwxyz____`",
+		},
+		{
+			name:          "extended ascii characters",
+			identifierIn:  "ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜø£Ø×ƒáíóúñÑªº¿®¬½¼¡«»░▒▓│┤ÁÂÀ©╣║╗╝¢¥┐└┴┬├─┼ãÃ╚╔╩╦╠═╬¤ðÐÊËÈıÍÎÏ┘┌█▄¦Ì▀ÓßÔÒõÕµþÞÚÛÙýÝ¯´≡±‗¾¶§÷¸°¨·¹³²■ ",
+			identifierOut: "`ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜø_Ø_ƒáíóúñÑªº___½¼________ÁÂÀ______________ãÃ________ðÐÊËÈıÍÎÏ_____Ì_ÓßÔÒõÕµþÞÚÛÙýÝ_____¾_______¹³²_ `",
 		},
 	}
 
