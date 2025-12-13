@@ -32,7 +32,7 @@ func filterIdentifierChars(s string) string {
 	return builder.String()
 }
 
-// QuoteIdentifier safely quotes a table identifier with backticks.
+// quoteIdentifier safely quotes a table identifier with backticks.
 // This is essential for DDL operations when table names contain backticks,
 // special characters, or are reserved words in BigQuery.
 // Invalid characters (like backticks) are automatically converted to underscores.
