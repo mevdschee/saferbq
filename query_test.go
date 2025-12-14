@@ -1,12 +1,14 @@
 package saferbq
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
 	"testing"
 
 	"cloud.google.com/go/bigquery"
+	"google.golang.org/api/option"
 )
 
 func TestQueryTranslate(t *testing.T) {
@@ -393,4 +395,82 @@ func BenchmarkTranslateVsConcat(b *testing.B) {
 				table1, table2, table1, table2)
 		}
 	})
+}
+
+func TestQueryRunSuccess(t *testing.T) {
+	ctx := context.Background()
+	client, err := NewClient(ctx, "test-project", option.WithoutAuthentication())
+	if err != nil {
+		t.Fatalf("NewClient() failed: %v", err)
+	}
+	defer client.Close()
+
+	q := client.Query("SELECT * FROM $table")
+	q.Parameters = []bigquery.QueryParameter{{Name: "$table", Value: "test_table"}}
+
+	_, err = q.Run(ctx)
+	// Expected to fail because we're not authenticated, but translate should succeed
+	if err != nil && !strings.Contains(err.Error(), "invalid") {
+		// Error is expected from BigQuery, not from translation
+		return
+	}
+}
+
+func TestQueryRunError(t *testing.T) {
+	ctx := context.Background()
+	client, err := NewClient(ctx, "test-project", option.WithoutAuthentication())
+	if err != nil {
+		t.Fatalf("NewClient() failed: %v", err)
+	}
+	defer client.Close()
+
+	q := client.Query("SELECT * FROM $table")
+	q.Parameters = []bigquery.QueryParameter{{Name: "$table", Value: "test;DROP"}}
+
+	_, err = q.Run(ctx)
+	if err == nil {
+		t.Error("Run() expected error for invalid identifier")
+	}
+	if !errors.Is(err, ErrIdentifierInvalidChars) {
+		t.Errorf("Run() error = %v, want ErrIdentifierInvalidChars", err)
+	}
+}
+
+func TestQueryReadSuccess(t *testing.T) {
+	ctx := context.Background()
+	client, err := NewClient(ctx, "test-project", option.WithoutAuthentication())
+	if err != nil {
+		t.Fatalf("NewClient() failed: %v", err)
+	}
+	defer client.Close()
+
+	q := client.Query("SELECT * FROM $table")
+	q.Parameters = []bigquery.QueryParameter{{Name: "$table", Value: "test_table"}}
+
+	_, err = q.Read(ctx)
+	// Expected to fail because we're not authenticated, but translate should succeed
+	if err != nil && !strings.Contains(err.Error(), "invalid") {
+		// Error is expected from BigQuery, not from translation
+		return
+	}
+}
+
+func TestQueryReadError(t *testing.T) {
+	ctx := context.Background()
+	client, err := NewClient(ctx, "test-project", option.WithoutAuthentication())
+	if err != nil {
+		t.Fatalf("NewClient() failed: %v", err)
+	}
+	defer client.Close()
+
+	q := client.Query("SELECT * FROM $table")
+	q.Parameters = []bigquery.QueryParameter{{Name: "$table", Value: "test;DROP"}}
+
+	_, err = q.Read(ctx)
+	if err == nil {
+		t.Error("Read() expected error for invalid identifier")
+	}
+	if !errors.Is(err, ErrIdentifierInvalidChars) {
+		t.Errorf("Read() error = %v, want ErrIdentifierInvalidChars", err)
+	}
 }

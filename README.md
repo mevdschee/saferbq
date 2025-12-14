@@ -331,6 +331,24 @@ Run tests:
 go test -v ./...
 ```
 
+Run tests with coverage:
+
+```bash
+go test -coverprofile=coverage.txt ./...
+```
+
+Calculate coverage percentage:
+
+```bash
+go tool cover -func=coverage.txt
+```
+
+Generate and view HTML coverage report:
+
+```bash
+go tool cover -html=coverage.txt
+```
+
 Run benchmarks:
 
 ```bash
