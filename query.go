@@ -91,6 +91,9 @@ const (
 //
 // Returns the transformed SQL, processed parameters, and any validation error.
 func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery.QueryParameter, error) {
+	if sql == "" {
+		return "", nil, ErrEmptySQL
+	}
 	// Build parameters and identifiers map
 	parameters := map[string]bigquery.QueryParameter{}
 	identifiers := map[string]any{}
