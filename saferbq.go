@@ -1,12 +1,3 @@
-// Package saferbq provides a wrapper for the BigQuery SDK that prevents SQL injection
-// in DDL operations by enabling dollar-sign $ syntax for table and dataset names.
-//
-// The package introduces $identifier syntax that automatically wraps identifiers in
-// backticks, validates them for invalid characters, and works alongside native
-// BigQuery @parameters and ? positional parameters.
-//
-// For more information, see: https://github.com/mevdschee/saferbq
-
 package saferbq
 
 import (
@@ -17,11 +8,23 @@ import (
 )
 
 // Client wraps a BigQuery client with enhanced parameter handling.
+// It provides the same functionality as bigquery.Client but with support
+// for $identifier parameters in queries.
 type Client struct {
 	bigquery.Client
 }
 
-// override NewClient to return a saferbq Client
+// NewClient creates a new BigQuery client with saferbq enhancements.
+// It accepts the same options as bigquery.NewClient and returns a client
+// that supports $identifier parameters in queries.
+//
+// Example:
+//
+//	client, err := saferbq.NewClient(ctx, "my-project")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	defer client.Close()
 func NewClient(ctx context.Context, projectID string, opts ...option.ClientOption) (*Client, error) {
 	bqClient, err := bigquery.NewClient(ctx, projectID, opts...)
 	if err != nil {
@@ -31,6 +34,17 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 }
 
 // Query creates a new Query with dollar-sign parameter support.
+// The query string can contain $identifier parameters that will be
+// safely quoted, as well as native BigQuery @parameters and ? positional
+// parameters.
+//
+// Example:
+//
+//	q := client.Query("SELECT * FROM $table WHERE status = @status")
+//	q.Parameters = []bigquery.QueryParameter{
+//	    {Name: "$table", Value: "users"},
+//	    {Name: "@status", Value: "active"},
+//	}
 func (c *Client) Query(q string) *Query {
 	bq := c.Client.Query(q)
 	return &Query{

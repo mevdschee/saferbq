@@ -13,16 +13,20 @@ const (
 	backtick = '`'
 )
 
-// isValidIdentifierChar checks if a rune is valid for BigQuery identifiers
-// Valid characters are defined as:
-// - L (letter)
-// - M (mark)
-// - N (number),
-// - Pc (connector, including underscore)
-// - Pd (dash)
-// - Zs (space).
+// isValidIdentifierChar checks if a rune is valid for BigQuery identifiers.
+// Valid characters are defined by Unicode categories:
+//   - L (letter): any Unicode letter
+//   - M (mark): combining marks and diacritics
+//   - N (number): any numeric digit
+//   - Pc (connector punctuation): underscore and similar
+//   - Pd (dash punctuation): hyphen and dash characters
+//   - Zs (space separator): space characters
+//
 // This follows BigQuery's table naming rules from:
 // https://docs.cloud.google.com/bigquery/docs/tables#table_naming
+//
+// Example valid characters: a-z, A-Z, 0-9, _, -, space, 表, á, ñ
+// Example invalid characters: `, ;, /, ., *, =, @, #
 func isValidIdentifierChar(r rune) bool {
 	return unicode.IsLetter(r) ||
 		unicode.IsMark(r) ||
@@ -30,8 +34,16 @@ func isValidIdentifierChar(r rune) bool {
 		unicode.In(r, unicode.Pc, unicode.Pd, unicode.Zs)
 }
 
-// filterIdentifierChars checks all characters for validity, filters out invalid
-// Unicode characters and replaces them with underscores.
+// filterIdentifierChars validates and sanitizes identifier strings.
+// It iterates through each rune in the input string and:
+//   - Keeps valid characters unchanged
+//   - Replaces invalid characters with underscores
+//   - Tracks which characters were replaced (for error reporting)
+//
+// Returns the sanitized identifier and a string containing all unique
+// characters that were replaced.
+//
+// This is an internal function used by QuoteIdentifier.
 func filterIdentifierChars(s string) (string, string) {
 	// start building the result
 	var result strings.Builder
@@ -53,9 +65,25 @@ func filterIdentifierChars(s string) (string, string) {
 }
 
 // QuoteIdentifier safely quotes a table identifier with backticks.
-// This is essential for DDL operations when table names contain backticks,
-// special characters, or are reserved words in BigQuery.
-// Invalid characters (like backticks) are automatically converted to underscores.
+// This is essential for DDL operations when table names may contain
+// special characters or are reserved words in BigQuery.
+//
+// Invalid characters are replaced with underscores and returned in the
+// second return value. Valid characters include:
+//   - Unicode letters, marks, and numbers
+//   - Underscores, dashes, and spaces
+//
+// The function accepts any type and converts it to a string.
+//
+// Example:
+//
+//	quoted, replaced := QuoteIdentifier("my-table")
+//	// quoted = "`my-table`", replaced = ""
+//
+//	quoted, replaced := QuoteIdentifier("table;DROP")
+//	// quoted = "`table_DROP`", replaced = ";"
+//
+// Returns the quoted identifier and a string containing all replaced characters.
 func QuoteIdentifier(identifier any) (string, string) {
 	var result, replaced string
 	switch v := identifier.(type) {

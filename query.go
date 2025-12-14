@@ -46,6 +46,10 @@ var (
 )
 
 // Query represents a BigQuery query with dollar-sign parameter support.
+// It wraps bigquery.Query and adds support for $identifier parameters
+// that are validated and safely quoted before execution.
+//
+// Use Client.Query() to create a new Query instance.
 type Query struct {
 	bigquery.Query
 	originalSQL string
@@ -73,8 +77,19 @@ const (
 )
 
 // translate converts dollar-sign parameters to BigQuery's native syntax.
-// @param stays as @param (native BigQuery parameters).
-// $identifier gets replaced with QuoteIdentifier(value).
+// It performs the following transformations:
+//   - $identifier parameters are validated and replaced with backtick-quoted values
+//   - @parameter names have the @ prefix removed for BigQuery compatibility
+//   - ? positional parameters are passed through unchanged
+//
+// The function validates:
+//   - All parameters in SQL are provided in params
+//   - All provided parameters are used in SQL
+//   - Identifiers contain only valid characters
+//   - Identifiers don't exceed 1024 bytes
+//   - Positional parameter counts match
+//
+// Returns the transformed SQL, processed parameters, and any validation error.
 func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery.QueryParameter, error) {
 	// Build parameters and identifiers map
 	parameters := map[string]bigquery.QueryParameter{}
@@ -183,7 +198,12 @@ func (q *Query) translate() error {
 	return nil
 }
 
-// Run initiates a query job after applying Translate to handle $ identifiers.
+// Run initiates a query job after translating $ identifiers.
+// It validates and transforms all $identifier parameters before
+// delegating to the underlying bigquery.Query.Run method.
+//
+// Returns an error if parameter validation fails or if the
+// underlying BigQuery query execution fails.
 func (q *Query) Run(ctx context.Context) (*bigquery.Job, error) {
 	// Apply translation
 	if err := q.translate(); err != nil {
@@ -193,8 +213,12 @@ func (q *Query) Run(ctx context.Context) (*bigquery.Job, error) {
 	return q.Query.Run(ctx)
 }
 
-// Read submits a query for execution and returns the results via a RowIterator.
-// It applies Translate to handle $ identifiers before executing.
+// Read submits a query for execution and returns results via a RowIterator.
+// It validates and transforms all $identifier parameters before
+// delegating to the underlying bigquery.Query.Read method.
+//
+// Returns an error if parameter validation fails or if the
+// underlying BigQuery query execution fails.
 func (q *Query) Read(ctx context.Context) (*bigquery.RowIterator, error) {
 	// Apply translation
 	if err := q.translate(); err != nil {
