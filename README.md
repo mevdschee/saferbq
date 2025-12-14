@@ -365,7 +365,8 @@ MIT
 
 ## Contributing
 
-Contributions welcome! Please open an issue or PR.
+Contributions welcome! Please open an issue or PR. Ensure you run the tests and
+keep 100% coverage.
 
 ## Related
 
