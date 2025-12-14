@@ -49,7 +49,7 @@
 //	q := client.Query("SELECT * FROM $table WHERE user_id = 123")
 //	q.Parameters = []bigquery.QueryParameter{{Name: "$table", Value: tableName}}
 //	_, err := q.Run(ctx)
-//	// Returns error: identifier $table contains invalid characters: `=;
+//	// Returns error: identifier contains invalid characters: $table contains `=;
 //
 // # Parameter Types
 //
