@@ -11,7 +11,7 @@
 // dataset names that are dynamically determined at runtime. BigQuery's official
 // Go SDK uses @ for named parameters and ? for positional parameters, but these
 // cannot be used for identifiers like table names that need backtick quoting.
-// You're forced to use string concatenation, which opens the door to SQL injection.
+// You should not use string concatenation, as that opens the door to SQL injection.
 //
 // # Solution
 //
