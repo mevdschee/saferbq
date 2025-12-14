@@ -186,11 +186,8 @@ func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery
 // translate applies the translation of $ identifiers to the Query's SQL and parameters.
 func (q *Query) translate() error {
 	originalSQL := q.QueryConfig.Q
-	if originalSQL == "" {
-		return ErrEmptySQL
-	}
-
 	parameters := q.Parameters
+
 	translatedSQL, translatedParams, err := translate(originalSQL, parameters)
 	if err != nil {
 		return fmt.Errorf("failed to translate query: %w", err)
