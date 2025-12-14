@@ -6,6 +6,13 @@ import (
 	"unicode"
 )
 
+const (
+	// underscore is the character used to replace invalid identifier characters
+	underscore = '_'
+	// backtick is the character used to quote identifiers
+	backtick = '`'
+)
+
 // isValidIdentifierChar checks if a rune is valid for BigQuery identifiers
 // Valid characters are defined as:
 // - L (letter)
@@ -35,7 +42,7 @@ func filterIdentifierChars(s string) (string, string) {
 		if isValidIdentifierChar(r) {
 			result.WriteRune(r)
 		} else {
-			result.WriteRune('_')
+			result.WriteRune(underscore)
 			if !replacedMap[r] {
 				replaced.WriteRune(r)
 				replacedMap[r] = true
@@ -59,5 +66,5 @@ func QuoteIdentifier(identifier any) (string, string) {
 	default:
 		result, replaced = filterIdentifierChars(fmt.Sprintf("%v", identifier))
 	}
-	return "`" + result + "`", replaced
+	return string(backtick) + result + string(backtick), replaced
 }
