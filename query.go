@@ -2,11 +2,47 @@ package saferbq
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 
 	"cloud.google.com/go/bigquery"
+)
+
+var (
+	// ErrInvalidParameterName is returned when a parameter name doesn't start with @ or $.
+	ErrInvalidParameterName = errors.New("invalid parameter name")
+
+	// ErrParameterNotFound is returned when a parameter in the params slice is not found in the query.
+	ErrParameterNotFound = errors.New("parameter not found in query")
+
+	// ErrParameterNotProvided is returned when a parameter in the query is not provided in the params slice.
+	ErrParameterNotProvided = errors.New("parameter not provided in parameters")
+
+	// ErrIdentifierNotFound is returned when an identifier in the params slice is not found in the query.
+	ErrIdentifierNotFound = errors.New("identifier not found in query")
+
+	// ErrIdentifierNotProvided is returned when an identifier in the query is not provided in the params slice.
+	ErrIdentifierNotProvided = errors.New("identifier not provided in parameters")
+
+	// ErrIdentifierEmpty is returned when an identifier value is empty.
+	ErrIdentifierEmpty = errors.New("identifier is empty")
+
+	// ErrIdentifierTooLong is returned when an identifier exceeds the maximum length.
+	ErrIdentifierTooLong = errors.New("identifier is too long")
+
+	// ErrIdentifierInvalidChars is returned when an identifier contains invalid characters.
+	ErrIdentifierInvalidChars = errors.New("identifier contains invalid characters")
+
+	// ErrNotEnoughPositionalParams is returned when there are fewer positional parameters provided than required.
+	ErrNotEnoughPositionalParams = errors.New("not enough positional parameters")
+
+	// ErrTooManyPositionalParams is returned when there are more positional parameters provided than required.
+	ErrTooManyPositionalParams = errors.New("too many positional parameters")
+
+	// ErrEmptySQL is returned when the query SQL is empty.
+	ErrEmptySQL = errors.New("query SQL cannot be empty")
 )
 
 // Query represents a BigQuery query with dollar-sign parameter support.
@@ -56,7 +92,7 @@ func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery
 			case dollarSign: // Identifier parameter
 				identifiers[paramName] = p.Value
 			default:
-				return "", nil, fmt.Errorf("invalid parameter name %s: must start with @ or $", paramName)
+				return "", nil, fmt.Errorf("%w: %s must start with @ or $", ErrInvalidParameterName, paramName)
 			}
 		} else {
 			// Positional parameter
@@ -80,48 +116,48 @@ func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery
 	// Detect parameters not present in the original SQL and return error
 	for paramName := range parameters {
 		if _, exists := parametersInSql[paramName]; !exists {
-			return "", nil, fmt.Errorf("parameter %s not found in query", paramName)
+			return "", nil, fmt.Errorf("%w: %s", ErrParameterNotFound, paramName)
 		}
 	}
 	// Detect parameters not present in the parameters slice and return error
 	for paramName := range parametersInSql {
 		_, exists := parameters[paramName]
 		if !exists {
-			return "", nil, fmt.Errorf("parameter %s not provided in parameters", paramName)
+			return "", nil, fmt.Errorf("%w: %s", ErrParameterNotProvided, paramName)
 		}
 	}
 	// Detect identifiers not present in the original SQL and return error
 	for identifier := range identifiers {
 		if _, exists := identifiersInSql[identifier]; !exists {
-			return "", nil, fmt.Errorf("identifier %s not found in query", identifier)
+			return "", nil, fmt.Errorf("%w: %s", ErrIdentifierNotFound, identifier)
 		}
 	}
 	// Detect identifiers not present in the identifiers map and return error
 	for identifier := range identifiersInSql {
 		_, exists := identifiers[identifier]
 		if !exists {
-			return "", nil, fmt.Errorf("identifier %s not provided in parameters", identifier)
+			return "", nil, fmt.Errorf("%w: %s", ErrIdentifierNotProvided, identifier)
 		}
 	}
 	// Count positional parameters in SQL
 	positionalParamsInSql := strings.Count(sql, string(questionMark))
 	if positionalParamsInSql > positionalParameterCount {
-		return "", nil, fmt.Errorf("not enough positional parameters: found %d, provided %d", positionalParamsInSql, positionalParameterCount)
+		return "", nil, fmt.Errorf("%w: found %d, provided %d", ErrNotEnoughPositionalParams, positionalParamsInSql, positionalParameterCount)
 	} else if positionalParamsInSql < positionalParameterCount {
-		return "", nil, fmt.Errorf("too many positional parameters: found %d, provided %d", positionalParamsInSql, positionalParameterCount)
+		return "", nil, fmt.Errorf("%w: found %d, provided %d", ErrTooManyPositionalParams, positionalParamsInSql, positionalParameterCount)
 	}
 	// Apply all replacements
 	result := sql
 	for identifier, value := range identifiers {
 		quoted, replaced := QuoteIdentifier(value)
 		if replaced != "" {
-			return "", nil, fmt.Errorf("identifier %s contains invalid characters: %s", identifier, replaced)
+			return "", nil, fmt.Errorf("%w: %s contains %s", ErrIdentifierInvalidChars, identifier, replaced)
 		}
 		if len(quoted) == 2 {
-			return "", nil, fmt.Errorf("identifier %s is empty", identifier)
+			return "", nil, fmt.Errorf("%w: %s", ErrIdentifierEmpty, identifier)
 		}
 		if len(quoted) > maxIdentifierBytes+2 { // +2 for backticks
-			return "", nil, fmt.Errorf("identifier %s is too long", identifier)
+			return "", nil, fmt.Errorf("%w: %s", ErrIdentifierTooLong, identifier)
 		}
 		result = strings.ReplaceAll(result, identifier, quoted)
 	}
@@ -132,7 +168,7 @@ func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery
 func (q *Query) translate() error {
 	originalSQL := q.QueryConfig.Q
 	if originalSQL == "" {
-		return fmt.Errorf("query SQL cannot be empty")
+		return ErrEmptySQL
 	}
 
 	parameters := q.Parameters
