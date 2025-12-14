@@ -309,10 +309,40 @@ func equalQueryParameters(a, b []bigquery.QueryParameter) bool {
 	return true
 }
 
+func TestQueryTranslateSQL(t *testing.T) {
+	q := &Query{
+		Query: bigquery.Query{
+			QueryConfig: bigquery.QueryConfig{
+				Q: "SELECT * FROM $table WHERE id = 1",
+				Parameters: []bigquery.QueryParameter{
+					{Name: "$table", Value: "mytable"},
+				},
+			},
+		},
+	}
+
+	err := q.translate()
+	if err != nil {
+		t.Fatalf("translate() unexpected error: %v", err)
+	}
+
+	expectedSQL := "SELECT * FROM `mytable` WHERE id = 1"
+	if q.QueryConfig.Q != expectedSQL {
+		t.Errorf("translate() SQL = %q, want %q", q.QueryConfig.Q, expectedSQL)
+	}
+
+	if len(q.Parameters) != 0 {
+		t.Errorf("translate() Parameters = %v, want empty", q.Parameters)
+	}
+}
+
 func TestQueryTranslateEmptySQL(t *testing.T) {
 	q := &Query{
-		originalSQL: "",
-		Query:       bigquery.Query{},
+		Query: bigquery.Query{
+			QueryConfig: bigquery.QueryConfig{
+				Q: "",
+			},
+		},
 	}
 
 	err := q.translate()
