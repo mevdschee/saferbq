@@ -371,7 +371,7 @@ keep 100% coverage.
 ## Related
 
 - [TQdev - Avoid BigQuery SQL injection in Go with saferbq](https://www.tqdev.com/2025-avoid-bigquery-sql-injection-go-saferbq/)
-- [BigQuery Go SDK](https://pkg.go.dev/cloud.google.com/go/bigquery)
-- [BigQuery Parameterized Queries](https://docs.cloud.google.com/bigquery/docs/parameterized-queries)
-- [BigQuery Identifiers](https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical)
-- [BigQuery Standard SQL Reference](https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax)
+- [Google - BigQuery Go SDK](https://pkg.go.dev/cloud.google.com/go/bigquery)
+- [Google - BigQuery Parameterized Queries](https://docs.cloud.google.com/bigquery/docs/parameterized-queries)
+- [Google - BigQuery Identifiers](https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical)
+- [Google - BigQuery Standard SQL Reference](https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax)
