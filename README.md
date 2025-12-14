@@ -235,9 +235,9 @@ Examples of valid identifier values:
 Examples that will cause errors:
 
 ```go
-{Name: "$table", Value: "table`; DROP TABLE"} // Error: invalid characters: `;
-{Name: "$table", Value: "my.table"}           // Error: invalid characters: .
-{Name: "$table", Value: "table/name"}         // Error: invalid characters: /
+{Name: "$table", Value: "table`; DROP TABLE"} // Error: $table contains `;
+{Name: "$table", Value: "my.table"}           // Error: $table contains .
+{Name: "$table", Value: "table/name"}         // Error: $table contains /
 ```
 
 Invalid characters include: ``!"#$%&'()*+,./:;<=>?@[\]^`{|}~`` and others
