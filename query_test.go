@@ -1,6 +1,7 @@
 package saferbq
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -306,6 +307,18 @@ func equalQueryParameters(a, b []bigquery.QueryParameter) bool {
 		}
 	}
 	return true
+}
+
+func TestQueryTranslateEmptySQL(t *testing.T) {
+	q := &Query{
+		originalSQL: "",
+		Query:       bigquery.Query{},
+	}
+
+	err := q.translate()
+	if !errors.Is(err, ErrEmptySQL) {
+		t.Errorf("Expected ErrEmptySQL, got %v", err)
+	}
 }
 
 func BenchmarkTranslateVsConcat(b *testing.B) {
