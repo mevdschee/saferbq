@@ -240,10 +240,13 @@ Examples that will cause errors:
 {Name: "$table", Value: "table/name"}         // Error: $table contains /
 ```
 
-Invalid characters include: ``!"#$%&'()*+,./:;<=>?@[\]^`{|}~`` and others
+Invalid characters in identifiers include: ``!"#$%&'()*+,./:;<=>?@[\]^`{|}~`` 
 
-**Important**: To dynamically reference a full path like `project.dataset.table`
-or `roles/bigquery.dataViewer`, use 3 separate parameters.
+The path expression separators are allowed: ``/.:-``
+
+Since path expression separators are allowed you can specify a full table path with 
+3 identifiers (like `project.dataset.table` or `roles/bigquery.dataViewer`) using 
+a single parameter.
 
 ## Safety Features
 
