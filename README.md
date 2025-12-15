@@ -220,24 +220,28 @@ The actual identifier values you provide must follow
 - **Allowed**: Letters (any Unicode letter), marks, numbers, connector
   punctuation (including `_`), dashes (`-`), and spaces
 - **Disallowed**: All other characters (including backticks, semicolons, quotes,
-  slashes, etc.) will cause the query to fail with an error
+  backslashes, etc.) will cause the query to fail with an error
 - **Length**: Not empty and up to 1024 bytes
 
 Examples of valid identifier values:
 
 ```go
-{Name: "$table", Value: "my-table"}    // Dashes allowed
-{Name: "$table", Value: "my table"}    // Spaces allowed
-{Name: "$table", Value: "table_123"}   // Underscores and numbers allowed
-{Name: "$table", Value: "表格"}         // Unicode letters allowed
+{Name: "$table", Value: "my-table"}      // Dashes allowed
+{Name: "$table", Value: "my table"}      // Spaces allowed
+{Name: "$table", Value: "table_123"}     // Underscores and numbers allowed
+{Name: "$table", Value: "表格"}           // Unicode letters allowed
+
+// Path separators are also allowed
+{Name: "$table", Value: "my-project.my-dataset.my-table"}           
+{Name: "$role", Value: "roles/bigquery.dataViewer"}
 ```
 
 Examples that will cause errors:
 
 ```go
 {Name: "$table", Value: "table`; DROP TABLE"} // Error: $table contains `;
-{Name: "$table", Value: "my.table"}           // Error: $table contains .
-{Name: "$table", Value: "table/name"}         // Error: $table contains /
+{Name: "$table", Value: "my@table"}           // Error: $table contains @
+{Name: "$table", Value: "table!name"}         // Error: $table contains !
 ```
 
 Invalid characters in identifiers include: ``!"#$%&'()*+,./:;<=>?@[\]^`{|}~`` 
