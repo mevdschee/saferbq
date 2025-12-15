@@ -119,7 +119,7 @@ q.Parameters = []bigquery.QueryParameter{
 }
 job, _ := q.Run(ctx)
 
-// Results: SELECT * FROM `my-project`.`my-dataset`.`my-table` WHERE id = 1
+// Results: SELECT * FROM `my-project.my-dataset.my-table` WHERE id = 1
 ```
 
 ### Mixing $ Identifiers with @ Parameters
