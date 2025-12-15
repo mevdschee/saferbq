@@ -110,14 +110,12 @@ job, _ := q.Run(ctx)
 
 ### Specifying a Path with multiple Identifiers
 
-Use separate `$` parameters for path segments:
+You may use a single `$` parameters for multiple path segments:
 
 ```go
-q := client.Query("SELECT * FROM $project.$dataset.$table WHERE id = 1")
+q := client.Query("SELECT * FROM $table WHERE id = 1")
 q.Parameters = []bigquery.QueryParameter{
-    {Name: "$project", Value: "my-project"},
-    {Name: "$dataset", Value: "my-dataset"},
-    {Name: "$table", Value: "my-table"},
+    {Name: "$table", Value: "my-project.my-dataset.my-table"},
 }
 job, _ := q.Run(ctx)
 
