@@ -170,10 +170,11 @@ checks that the values are not empty and validates each character.
 Each identifier value is validated by iterating through its characters. Valid
 characters include Unicode letters, marks, numbers, underscores, dashes, and
 spaces. If any invalid character is found (such as backticks, semicolons,
-quotes, or slashes), the query immediately fails with a detailed error message
-listing the problematic characters. This prevents any attempt at SQL injection
-from being executed. The query also fails when the BigQuery's 1024-byte limit on
-identifiers is exceeded.
+quotes, or backslashes), the query immediately fails with a detailed error message
+listing the problematic characters. Path expression separators (slash `/`, dot `.`,
+colon `:`, and dash `-`) are allowed so you can pass multi-segment identifiers in
+a single parameter. This prevents any attempt at SQL injection from being executed.
+The query also fails when the BigQuery's 1024-byte limit on identifiers is exceeded.
 
 After validation succeeds, each identifier is wrapped in backticks and
 substituted into the SQL in place of its `$parameter` placeholder. Native
