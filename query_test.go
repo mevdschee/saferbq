@@ -21,10 +21,10 @@ func TestQueryTranslate(t *testing.T) {
 		errorMessage  string
 	}{
 		{
-			name:          "identifier replacement only",
-			sqlIn:         "SELECT * FROM $project.$dataset.$table WHERE id = 1",
-			parametersIn:  []bigquery.QueryParameter{{Name: "$project", Value: "myproject"}, {Name: "$dataset", Value: "mydataset"}, {Name: "$table", Value: "mytable"}},
-			sqlOut:        "SELECT * FROM `myproject`.`mydataset`.`mytable` WHERE id = 1",
+			name:          "identifier replacement only, full table path",
+			sqlIn:         "SELECT * FROM $table WHERE id = 1",
+			parametersIn:  []bigquery.QueryParameter{{Name: "$table", Value: "myproject.mydataset.mytable"}},
+			sqlOut:        "SELECT * FROM `myproject.mydataset.mytable` WHERE id = 1",
 			parametersOut: []bigquery.QueryParameter{},
 		},
 		{
