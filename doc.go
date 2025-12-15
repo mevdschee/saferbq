@@ -65,19 +65,18 @@
 //   - Contain only alphanumeric characters and underscores
 //   - No dots allowed in parameter names
 //
-// For fully qualified table names, use separate parameters:
+// For fully qualified table names can be combined into a single $table parameter:
 //
-//	q := client.Query("SELECT * FROM $project.$dataset.$table")
+//	q := client.Query("SELECT * FROM $table WHERE id = 1")
 //	q.Parameters = []bigquery.QueryParameter{
-//	    {Name: "$project", Value: "my-project"},
-//	    {Name: "$dataset", Value: "my-dataset"},
-//	    {Name: "$table", Value: "my-table"},
+//	    {Name: "$table", Value: "my-project.my-dataset.my-table"},
 //	}
 //
 // Identifier values (the actual table/dataset names) follow BigQuery's rules:
 //   - Unicode letters, marks, numbers
 //   - Underscores, dashes, spaces
 //   - Maximum 1024 bytes
+//   - Path expression separators allowed (dots, slashes, colons and hyphens)
 //   - Invalid characters cause query to fail with error
 //
 // # Error Handling
