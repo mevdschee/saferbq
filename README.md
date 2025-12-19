@@ -110,18 +110,16 @@ job, _ := q.Run(ctx)
 
 ### Specifying a Path with multiple Identifiers
 
-Use separate `$` parameters for path segments:
+You may use a single `$` parameters for multiple path segments:
 
 ```go
-q := client.Query("SELECT * FROM $project.$dataset.$table WHERE id = 1")
+q := client.Query("SELECT * FROM $table WHERE id = 1")
 q.Parameters = []bigquery.QueryParameter{
-    {Name: "$project", Value: "my-project"},
-    {Name: "$dataset", Value: "my-dataset"},
-    {Name: "$table", Value: "my-table"},
+    {Name: "$table", Value: "my-project.my-dataset.my-table"},
 }
 job, _ := q.Run(ctx)
 
-// Results: SELECT * FROM `my-project`.`my-dataset`.`my-table` WHERE id = 1
+// Results: SELECT * FROM `my-project.my-dataset.my-table` WHERE id = 1
 ```
 
 ### Mixing $ Identifiers with @ Parameters
@@ -175,10 +173,11 @@ checks that the values are not empty and validates each character.
 Each identifier value is validated by iterating through its characters. Valid
 characters include Unicode letters, marks, numbers, underscores, dashes, and
 spaces. If any invalid character is found (such as backticks, semicolons,
-quotes, or slashes), the query immediately fails with a detailed error message
-listing the problematic characters. This prevents any attempt at SQL injection
-from being executed. The query also fails when the BigQuery's 1024-byte limit on
-identifiers is exceeded.
+quotes, or backslashes), the query immediately fails with a detailed error message
+listing the problematic characters. Path expression separators (slash `/`, dot `.`,
+colon `:`, and dash `-`) are allowed so you can pass multi-segment identifiers in
+a single parameter. This prevents any attempt at SQL injection from being executed.
+The query also fails when the BigQuery's 1024-byte limit on identifiers is exceeded.
 
 After validation succeeds, each identifier is wrapped in backticks and
 substituted into the SQL in place of its `$parameter` placeholder. Native
@@ -228,30 +227,37 @@ The actual identifier values you provide must follow
 - **Allowed**: Letters (any Unicode letter), marks, numbers, connector
   punctuation (including `_`), dashes (`-`), and spaces
 - **Disallowed**: All other characters (including backticks, semicolons, quotes,
-  slashes, etc.) will cause the query to fail with an error
+  backslashes, etc.) will cause the query to fail with an error
 - **Length**: Not empty and up to 1024 bytes
 
 Examples of valid identifier values:
 
 ```go
-{Name: "$table", Value: "my-table"}    // Dashes allowed
-{Name: "$table", Value: "my table"}    // Spaces allowed
-{Name: "$table", Value: "table_123"}   // Underscores and numbers allowed
-{Name: "$table", Value: "表格"}         // Unicode letters allowed
+{Name: "$table", Value: "my-table"}      // Dashes allowed
+{Name: "$table", Value: "my table"}      // Spaces allowed
+{Name: "$table", Value: "table_123"}     // Underscores and numbers allowed
+{Name: "$table", Value: "表格"}           // Unicode letters allowed
+
+// Path separators are also allowed
+{Name: "$table", Value: "my-project.my-dataset.my-table"}           
+{Name: "$role", Value: "roles/bigquery.dataViewer"}
 ```
 
 Examples that will cause errors:
 
 ```go
 {Name: "$table", Value: "table`; DROP TABLE"} // Error: $table contains `;
-{Name: "$table", Value: "my.table"}           // Error: $table contains .
-{Name: "$table", Value: "table/name"}         // Error: $table contains /
+{Name: "$table", Value: "my@table"}           // Error: $table contains @
+{Name: "$table", Value: "table!name"}         // Error: $table contains !
 ```
 
-Invalid characters include: ``!"#$%&'()*+,./:;<=>?@[\]^`{|}~`` and others
+Invalid characters in identifiers include: ``!"#$%&'()*+,./:;<=>?@[\]^`{|}~`` 
 
-**Important**: To dynamically reference a full path like `project.dataset.table`
-or `roles/bigquery.dataViewer`, use 3 separate parameters.
+The path expression separators are allowed: ``/.:-``
+
+Since path expression separators are allowed you can specify a full table path with 
+3 identifiers (like `project.dataset.table` or `roles/bigquery.dataViewer`) using 
+a single parameter.
 
 ## Safety Features
 

@@ -13,6 +13,14 @@ const (
 	backtick = '`'
 )
 
+// isPathExpressionSeparatorChar checks if a rune is a valid path expression separator.
+// Valid separators are: '/', '.', ':', '-'
+//
+// This is used in path expressions in BigQuery, such as roles and table paths.
+func isPathExpressionSeparatorChar(r rune) bool {
+	return r == '/' || r == '.' || r == ':' || r == '-'
+}
+
 // isValidIdentifierChar checks if a rune is valid for BigQuery identifiers.
 // Valid characters are defined by Unicode categories:
 //   - L (letter): any Unicode letter
@@ -51,7 +59,7 @@ func filterIdentifierChars(s string) (string, string) {
 	var replaced strings.Builder
 	replacedMap := make(map[rune]bool)
 	for _, r := range s {
-		if isValidIdentifierChar(r) {
+		if isValidIdentifierChar(r) || isPathExpressionSeparatorChar(r) {
 			result.WriteRune(r)
 		} else {
 			result.WriteRune(underscore)

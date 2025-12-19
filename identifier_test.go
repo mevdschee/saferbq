@@ -38,8 +38,8 @@ func TestQuoteIdentifier(t *testing.T) {
 		{
 			name:          "with dot",
 			identifierIn:  "my.dataset.table",
-			identifierOut: "`my_dataset_table`",
-			replaced:      ".",
+			identifierOut: "`my.dataset.table`",
+			replaced:      "",
 		},
 		{
 			name:          "with space",
@@ -74,8 +74,8 @@ func TestQuoteIdentifier(t *testing.T) {
 		{
 			name:          "with slashes",
 			identifierIn:  "my/dataset/table",
-			identifierOut: "`my_dataset_table`",
-			replaced:      "/",
+			identifierOut: "`my/dataset/table`",
+			replaced:      "",
 		},
 		{
 			name:          "with special chars",
@@ -110,8 +110,8 @@ func TestQuoteIdentifier(t *testing.T) {
 		{
 			name:          "printable 7 bit ASCII (32-126)",
 			identifierIn:  " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
-			identifierOut: "` ____________-__0123456789_______ABCDEFGHIJKLMNOPQRSTUVWXYZ______abcdefghijklmnopqrstuvwxyz____`",
-			replaced:      "!\"#$%&'()*+,./:;<=>?@[\\]^`{|}~",
+			identifierOut: "` ____________-./0123456789:______ABCDEFGHIJKLMNOPQRSTUVWXYZ______abcdefghijklmnopqrstuvwxyz____`",
+			replaced:      "!\"#$%&'()*+,;<=>?@[\\]^`{|}~",
 		},
 	}
 
@@ -141,16 +141,51 @@ func TestIsValidIdentifierChar(t *testing.T) {
 		{"underscore", '_', true},
 		{"dash", '-', true},
 		{"space", ' ', true},
+		{"dollar sign", '$', false},
+		{"at sign", '@', false},
+		{"colon", ':', false},
 		{"backtick", '`', false},
 		{"semicolon", ';', false},
 		{"unicode letter", '表', true},
 		{"emoji", '😀', false},
+		{"exclamation", '!', false},
+		{"dot", '.', false},
+		{"slash", '/', false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := isValidIdentifierChar(tt.char); got != tt.valid {
 				t.Errorf("isValidIdentifierChar(%q) = %v, want %v", tt.char, got, tt.valid)
+			}
+		})
+	}
+}
+
+func TestIsPathExpressionSeparatorChar(t *testing.T) {
+	tests := []struct {
+		name        string
+		char        rune
+		isSeparator bool
+	}{
+		{"dot", '.', true},
+		{"forward slash", '/', true},
+		{"colon", ':', true},
+		{"dash", '-', true},
+		{"letter", 'a', false},
+		{"number", '1', false},
+		{"underscore", '_', false},
+		{"space", ' ', false},
+		{"dollar sign", '$', false},
+		{"at sign", '@', false},
+		{"backtick", '`', false},
+		{"semicolon", ';', false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isPathExpressionSeparatorChar(tt.char); got != tt.isSeparator {
+				t.Errorf("isPathExpressionSeparatorChar(%q) = %v, want %v", tt.char, got, tt.isSeparator)
 			}
 		})
 	}
