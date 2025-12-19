@@ -28,7 +28,7 @@ func TestQueryTranslate(t *testing.T) {
 			parametersOut: []bigquery.QueryParameter{},
 		},
 		{
-			name:          "identifier replacement and positional parameter",
+			name:          "identifier replacement with positional parameter",
 			sqlIn:         "SELECT * FROM $project.$dataset.$table WHERE id = ?",
 			parametersIn:  []bigquery.QueryParameter{{Name: "$project", Value: "myproject"}, {Name: "$dataset", Value: "mydataset"}, {Name: "$table", Value: "mytable"}, {Value: 1}},
 			sqlOut:        "SELECT * FROM `myproject`.`mydataset`.`mytable` WHERE id = ?",
@@ -205,6 +205,12 @@ func TestQueryTranslate(t *testing.T) {
 			sqlIn:        "SELECT * FROM $table WHERE id = ?",
 			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: "mytable"}, {Value: 1}, {Value: 2}},
 			errorMessage: "too many positional parameters: found 1, provided 2",
+		},
+		{
+			name:         "mixing positional and named parameters",
+			sqlIn:        "SELECT * FROM $table WHERE id = ? AND status = @status",
+			parametersIn: []bigquery.QueryParameter{{Name: "$table", Value: "mytable"}, {Name: "@status", Value: "active"}, {Value: 1}},
+			errorMessage: "cannot mix positional (?) and named (@) parameters",
 		},
 		{
 			name:         "no positional parameters in query but some provided",

@@ -18,8 +18,11 @@
 // saferbq introduces $identifier syntax that:
 //   - Automatically wraps identifiers in backticks
 //   - Validates identifiers and fails when invalid characters are present
-//   - Works alongside native BigQuery @parameters and ? positional parameters
+//   - Works with either BigQuery @parameters or ? positional parameters
 //   - Validates that all parameters are present before execution
+//
+// Note: BigQuery does not support mixing @ named parameters and ? positional
+// parameters in the same query. You can use $ identifiers with either type.
 //
 // # Basic Usage
 //

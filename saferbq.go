@@ -35,8 +35,8 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 
 // Query creates a new Query with dollar-sign parameter support.
 // The query string can contain $identifier parameters that will be
-// safely quoted, as well as native BigQuery @parameters and ? positional
-// parameters.
+// safely quoted. You can also use either native BigQuery @parameters
+// or ? positional parameters (but not both in the same query).
 //
 // Example:
 //

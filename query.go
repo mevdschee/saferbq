@@ -41,6 +41,9 @@ var (
 	// ErrTooManyPositionalParams is returned when there are more positional parameters provided than required.
 	ErrTooManyPositionalParams = errors.New("too many positional parameters")
 
+	// ErrMixedParameterTypes is returned when both positional (?) and named (@) parameters are used together.
+	ErrMixedParameterTypes = errors.New("cannot mix positional (?) and named (@) parameters")
+
 	// ErrEmptySQL is returned when the query SQL is empty.
 	ErrEmptySQL = errors.New("query SQL cannot be empty")
 )
@@ -158,8 +161,15 @@ func translate(sql string, params []bigquery.QueryParameter) (string, []bigquery
 			return "", nil, fmt.Errorf("%w: %s", ErrIdentifierNotProvided, identifier)
 		}
 	}
-	// Count positional parameters in SQL
+	// Check for mixing of positional and named parameters
 	positionalParamsInSql := strings.Count(sql, string(questionMark))
+	hasNamedParams := len(parametersInSql) > 0
+	hasPositionalParams := positionalParamsInSql > 0
+	if hasNamedParams && hasPositionalParams {
+		return "", nil, ErrMixedParameterTypes
+	}
+	// Count positional parameters in SQL
+	positionalParamsInSql = strings.Count(sql, string(questionMark))
 	if positionalParamsInSql > positionalParameterCount {
 		return "", nil, fmt.Errorf("%w: found %d, provided %d", ErrNotEnoughPositionalParams, positionalParamsInSql, positionalParameterCount)
 	} else if positionalParamsInSql < positionalParameterCount {

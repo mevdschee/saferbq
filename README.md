@@ -140,9 +140,9 @@ job, _ := q.Run(ctx)
 // Results: SELECT * FROM `my-table` WHERE corpus = @corpus
 ```
 
-### Combining with Positional Parameters
+### Combining $ Identifiers with Positional Parameters
 
-You can mix the named parameters with positional parameters.
+You can use `$` identifiers with positional parameters.
 
 ```go
 q := client.Query("SELECT * FROM $table WHERE id = ? AND status = ?")
@@ -155,6 +155,9 @@ job, _ := q.Run(ctx)
 
 // Results: SELECT * FROM `my-table` WHERE id = ? AND status = ?
 ```
+
+**Important**: You cannot mix positional (`?`) and named (`@`) parameters in the
+same query. BigQuery does not support this combination.
 
 ## How It Works
 
@@ -199,6 +202,11 @@ preserving the security benefits of parameterized queries for data values.
 Only the `$` parameters are replaced, while the `@` parameters and `?`
 (positional) parameters are handled by the normal BigQuery parameterized query
 mechanism.
+
+**Important**: You cannot mix `@` named parameters and `?` positional parameters
+in the same query. This is a BigQuery limitation, not specific to saferbq. You
+can use `$` identifiers with either `@` or `?` parameters, but not both types
+together.
 
 ## Naming Restrictions
 
@@ -291,6 +299,7 @@ if errors.Is(err, saferbq.ErrIdentifierInvalidChars) {
 | `ErrIdentifierInvalidChars`    | Identifier contains invalid characters             |
 | `ErrNotEnoughPositionalParams` | Fewer positional parameters provided than required |
 | `ErrTooManyPositionalParams`   | More positional parameters provided than required  |
+| `ErrMixedParameterTypes`       | Both positional (?) and named (@) parameters used  |
 | `ErrEmptySQL`                  | Query SQL is empty                                 |
 
 ### Error Examples
