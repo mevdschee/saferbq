@@ -3,6 +3,9 @@
 A Go wrapper for the BigQuery SDK that prevents SQL injection in DDL by enabling
 dollar-sign `$` syntax for table and dataset names that need backtick quoting.
 
+Related blog post:
+https://www.tqdev.com/2025-avoid-bigquery-sql-injection-go-saferbq/
+
 ## The Problem
 
 When building dynamic BigQuery queries, you often need to reference table or
@@ -173,11 +176,12 @@ checks that the values are not empty and validates each character.
 Each identifier value is validated by iterating through its characters. Valid
 characters include Unicode letters, marks, numbers, underscores, dashes, and
 spaces. If any invalid character is found (such as backticks, semicolons,
-quotes, or backslashes), the query immediately fails with a detailed error message
-listing the problematic characters. Path expression separators (slash `/`, dot `.`,
-colon `:`, and dash `-`) are allowed so you can pass multi-segment identifiers in
-a single parameter. This prevents any attempt at SQL injection from being executed.
-The query also fails when the BigQuery's 1024-byte limit on identifiers is exceeded.
+quotes, or backslashes), the query immediately fails with a detailed error
+message listing the problematic characters. Path expression separators (slash
+`/`, dot `.`, colon `:`, and dash `-`) are allowed so you can pass multi-segment
+identifiers in a single parameter. This prevents any attempt at SQL injection
+from being executed. The query also fails when the BigQuery's 1024-byte limit on
+identifiers is exceeded.
 
 After validation succeeds, each identifier is wrapped in backticks and
 substituted into the SQL in place of its `$parameter` placeholder. Native
@@ -251,13 +255,13 @@ Examples that will cause errors:
 {Name: "$table", Value: "table!name"}         // Error: $table contains !
 ```
 
-Invalid characters in identifiers include: ``!"#$%&'()*+,./:;<=>?@[\]^`{|}~`` 
+Invalid characters in identifiers include: ``!"#$%&'()*+,./:;<=>?@[\]^`{|}~``
 
-The path expression separators are allowed: ``/.:-``
+The path expression separators are allowed: `/.:-`
 
-Since path expression separators are allowed you can specify a full table path with 
-3 identifiers (like `project.dataset.table` or `roles/bigquery.dataViewer`) using 
-a single parameter.
+Since path expression separators are allowed you can specify a full table path
+with 3 identifiers (like `project.dataset.table` or `roles/bigquery.dataViewer`)
+using a single parameter.
 
 ## Safety Features
 
